@@ -25,6 +25,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Repositories / database (`src/server/db`, feature repositories):** Prisma access, query composition, persistence mapping, and transaction boundaries. Prisma types should not become the public contract of every layer. `src/server/db/prisma.ts` is server-only and owns the pooled runtime singleton.
 - **Authentication (`src/auth.ts`, `src/server/auth`):** Auth.js configuration, credential verification, login abuse controls, session shaping, database-backed current-actor resolution, and role policy.
 - **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible-staff projection, and development catalogue bootstrap policy.
+- **Availability (`src/server/availability`):** pure wall-clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity-blocking bookings to the domain core.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -61,6 +62,12 @@ Login attempts use fixed 15-minute PostgreSQL windows with a limit of ten attemp
 
 Eligible professionals are fetched in the detail query, avoiding an N+1 pattern. Only explicitly assigned, `ACTIVE` users are eligible, and only `id` and `name` leave the repository. An assigned active `ADMIN` may appear because the assignment is deliberate and administrators already satisfy staff-level operational policy; role itself is never exposed publicly. Future availability logic will further determine who can serve a concrete time.
 
+## Availability engine
+
+`generateAvailabilitySlots()` is framework- and database-independent. It merges overlapping local availability windows, anchors starts to the studio-local midnight grid, rejects starts whose wall-clock time does not exist, measures service duration in elapsed instants, and applies half-open overlap checks for blocks and bookings. Fall-back ambiguous local times choose the earlier instant exactly once. The service layer performs one service/staff query followed by bounded rules, block, and booking queries for the requested local day; it aggregates identical start instants across eligible staff without assigning anyone.
+
+The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLeadMinutes`, `bookingHorizonDays`, and `slotIntervalMinutes`. Horizon boundaries are inclusive (`local today + bookingHorizonDays`), and a slot exactly at `now + lead time` is allowed. Availability is an advisory snapshot only; TASK-006 must revalidate and reserve capacity transactionally.
+
 ## Request and mutation rules
 
 1. Treat request data, search parameters, sessions, and database reads crossing a trust boundary as untrusted.
@@ -91,4 +98,4 @@ Slot results are advisory snapshots. Two customers can see the same slot before 
 
 ## Rendering and dependencies
 
-Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`; runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI/migrations. The driver pool is bounded and created lazily through a development-safe singleton. Auth.js, bcrypt, and Zod are active server-side dependencies as of TASK-003.
+Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`; runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI/migrations. The driver pool is bounded and created lazily through a development-safe singleton. Auth.js, bcrypt, and Zod are active server-side dependencies as of TASK-003; Luxon is used by TASK-005 for explicit IANA timezone and DST conversion.

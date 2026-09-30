@@ -61,6 +61,10 @@ The migration inserts the fixed `default` settings row with `ON CONFLICT DO NOTH
 
 Public service queries require both `isPublished` and `isActive`. Detail queries join `StaffService` in the same database request, keep only assigned `ACTIVE` users, and select only their public-safe `id` and `name` fields.
 
+## Availability reads
+
+TASK-005 uses the existing `Service`, `StaffService`, `User`, `AvailabilityRule`, `BlockedTime`, `Booking`, and `BusinessSettings` models; no schema or migration change was required. The Prisma adapter fetches the active published service and assigned active staff, then loads only matching weekday rules and intervals intersecting the requested studio-local day. Booking reads filter to `PENDING` and `CONFIRMED`, matching the existing PostgreSQL exclusion constraint; `COMPLETED`, `CANCELLED`, and `NO_SHOW` do not block candidates.
+
 ## Login rate-limit persistence
 
 The authentication adapter stores fixed-window login counters in `RateLimitBucket`. Account and available network identifiers are separately HMAC-SHA256 digested with `RATE_LIMIT_SECRET`; plaintext emails and network values are never bucket keys. Atomic PostgreSQL upserts increment each counter, and authentication is rejected once either identity reaches ten attempts in a 15-minute window. Expired buckets are safe to remove in future maintenance work.

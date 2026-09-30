@@ -2,7 +2,7 @@ import "server-only";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "../../generated/prisma/client";
 
 function readPositiveInteger(name: string, fallback: number) {
   const rawValue = process.env[name];

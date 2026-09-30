@@ -34,6 +34,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** calculate accurate candidate slots.
 - **Deliverables:** pure slot generator covering duration, hours, staff rules, blocks, bookings, lead time, horizon, interval, and timezone.
 - **Acceptance:** deterministic unit/integration tests cover boundaries and daylight-saving behavior; results never imply a guarantee.
+- **Status:** implementation complete; pure timezone-aware engine, dynamic public endpoint, live PostgreSQL integration, DST tests, and advisory aggregation are validated. Booking creation remains TASK-006.
 
 ## TASK-006 — Booking creation
 

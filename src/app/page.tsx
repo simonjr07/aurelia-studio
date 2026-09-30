@@ -1,69 +1,69 @@
-import Image from "next/image";
+const values = [
+  ["Considered services", "A curated menu designed around your time and wellbeing."],
+  ["Flexible scheduling", "Choose the professional, date, and time that suit you."],
+  ["Simple management", "Your booking details will stay easy to review and update."],
+] as const;
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="min-h-screen overflow-hidden bg-cream text-ink">
+      <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-7 sm:px-10 lg:px-12" aria-label="Primary navigation">
+        <a className="font-display text-xl tracking-[0.18em]" href="#top" aria-label="Aurelia Studio home">
+          AURELIA
+        </a>
+        <span className="rounded-full border border-ink/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/65">
+          Booking experience in development
+        </span>
+      </nav>
+
+      <section id="top" className="relative mx-auto grid min-h-[650px] w-full max-w-7xl items-center gap-14 px-6 py-16 sm:px-10 lg:grid-cols-[1.08fr_0.92fr] lg:px-12 lg:py-24">
+        <div className="relative z-10 max-w-3xl">
+          <p className="mb-7 text-xs font-semibold uppercase tracking-[0.28em] text-clay">Beauty · Wellness · Your time</p>
+          <h1 className="font-display text-6xl leading-[0.94] tracking-[-0.045em] sm:text-7xl lg:text-[6.5rem]">
+            Thoughtful care,
+            <span className="block italic text-clay">beautifully scheduled.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-9 max-w-xl text-lg leading-8 text-ink/65 sm:text-xl">
+            Aurelia Studio is creating a calm, effortless way to discover services and reserve time with trusted beauty and wellness professionals.
           </p>
+          <div className="mt-10 flex flex-wrap items-center gap-5">
+            <span className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-sm font-semibold text-cream shadow-lg shadow-ink/10" aria-disabled="true">
+              Online booking coming soon
+            </span>
+            <a className="text-sm font-semibold underline decoration-clay/50 underline-offset-8 transition hover:decoration-clay" href="#experience">
+              Explore the experience
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-md" aria-hidden="true">
+          <div className="absolute inset-4 rounded-[45%_45%_8%_8%] bg-sage shadow-2xl shadow-ink/10" />
+          <div className="absolute left-1/2 top-[17%] h-72 w-48 -translate-x-1/2 rounded-[50%] border border-cream/70" />
+          <div className="absolute left-1/2 top-[23%] h-72 w-px -translate-x-1/2 rotate-[24deg] bg-cream/60" />
+          <div className="absolute bottom-[16%] left-[16%] h-24 w-24 rounded-full bg-clay" />
+          <div className="absolute bottom-[10%] right-[14%] grid h-40 w-40 place-items-center rounded-full border border-ink/20 bg-cream/90 text-center font-display text-xl italic">
+            Your time,
+            <br /> beautifully held
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section id="experience" className="border-y border-ink/10 bg-white/45">
+        <div className="mx-auto grid w-full max-w-7xl divide-y divide-ink/10 px-6 sm:px-10 lg:grid-cols-3 lg:divide-x lg:divide-y-0 lg:px-12">
+          {values.map(([title, description], index) => (
+            <article className="py-10 lg:px-9 lg:py-14 first:pl-0 last:pr-0" key={title}>
+              <p className="mb-6 text-xs font-semibold tracking-[0.2em] text-clay">0{index + 1}</p>
+              <h2 className="font-display text-2xl">{title}</h2>
+              <p className="mt-3 max-w-sm leading-7 text-ink/60">{description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-8 text-xs uppercase tracking-[0.15em] text-ink/45 sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-12">
+        <p>© {new Date().getFullYear()} Aurelia Studio</p>
+        <p>Premium appointment care</p>
+      </footer>
+    </main>
   );
 }

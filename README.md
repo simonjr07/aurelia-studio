@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aurelia Studio
 
-## Getting Started
+Aurelia Studio is a fictional premium beauty and wellness studio. This repository will become a production-style appointment platform for public booking and role-aware staff operations.
 
-First, run the development server:
+## Planned capabilities
+
+- Service discovery and guided appointment booking
+- Staff selection, availability, rescheduling, and cancellation
+- Staff appointment workflows and schedule management
+- Administrative service, staff, hours, rules, and analytics controls
+- Timezone-aware scheduling with server- and database-enforced conflict protection
+
+The project is currently at **Task 001: foundation and documentation**. Booking, authentication, persistence, and administration are planned; they are not implemented yet.
+
+## Architecture and stack
+
+The planned request path is Browser → Next.js App Router → server-side application/domain logic → Prisma → PostgreSQL. Production will use Vercel and Supabase PostgreSQL. The stack also includes TypeScript, Tailwind CSS, Auth.js, bcrypt, Zod, Vitest, Docker Compose, and GitHub Actions as their roadmap tasks are introduced.
+
+## Local development
+
+Requires Node.js 20.9 or newer. PostgreSQL setup will be added with the database foundation task.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+- [Product requirements](docs/PRODUCT_REQUIREMENTS.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Database design](docs/DATABASE.md)
+- [API conventions](docs/API.md)
+- [Task roadmap](docs/TASKS.md)
+- [Architecture decisions](docs/DECISIONS.md)
+- [Testing strategy](docs/TESTING.md)
+- [Security](docs/SECURITY.md)
+- [Deployment](docs/DEPLOYMENT.md)
+- [Definition of done](docs/DEFINITION_OF_DONE.md)
+- [Case study plan](docs/CASE_STUDY.md)
+- [Screenshot plan](docs/SCREENSHOTS.md)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Foundation in progress. No production services or credentials are required at this stage.

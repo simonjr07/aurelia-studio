@@ -32,4 +32,13 @@ Pull requests run install, lint, typecheck, tests, and production build. Feature
 
 ## Current state
 
-TASK-001 configures a passing Vitest command with no feature tests because no domain behavior exists yet. The first implemented behavior must introduce its tests; empty-test passing is a temporary foundation state.
+TASK-002 adds unit checks for the approved business defaults and live PostgreSQL integration coverage for `StaffService` uniqueness and the manual overlap constraint. The database suite proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
+
+Local database test sequence:
+
+```bash
+docker compose up -d db
+npm run db:deploy
+npm run db:smoke
+npm test
+```

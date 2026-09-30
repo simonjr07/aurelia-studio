@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project is currently at **Task 001: foundation and documentation**. Booking, authentication, persistence, and administration are planned; they are not implemented yet.
+The project currently includes the **Task 002 database foundation**. Booking UI, availability calculation, authentication, and administration are not implemented yet.
 
 ## Architecture and stack
 
@@ -18,10 +18,14 @@ The planned request path is Browser → Next.js App Router → server-side appli
 
 ## Local development
 
-Requires Node.js 20.9 or newer. PostgreSQL setup will be added with the database foundation task.
+Requires Node.js 20.9 or newer and Docker Compose. Local PostgreSQL uses host port `5434`.
 
 ```bash
 npm install
+Copy-Item .env.example .env # PowerShell; keep .env uncommitted
+docker compose up -d db
+npm run db:migrate
+npm run db:smoke
 npm run dev
 ```
 
@@ -35,6 +39,8 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:smoke`, and `db:studio`.
 
 ## Documentation
 
@@ -53,4 +59,4 @@ npm run build
 
 ## Status
 
-Foundation in progress. No production services or credentials are required at this stage.
+Database foundation implemented. Local migration/integration validation requires PostgreSQL; no production services or credentials are required at this stage.

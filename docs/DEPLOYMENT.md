@@ -4,7 +4,7 @@ Deployment is planned for TASK-015; no Vercel project, Supabase project, product
 
 ## Environments
 
-- **Local:** Next.js development server and, from TASK-002, Docker Compose PostgreSQL.
+- **Local:** Next.js development server and PostgreSQL 17 in Docker Compose at `localhost:5434` (`5432` inside the container).
 - **Preview:** Vercel preview deployment with an isolated/non-production database strategy and synthetic data.
 - **Production:** Vercel-hosted Next.js connected over TLS to Supabase PostgreSQL in a compatible region.
 
@@ -12,7 +12,7 @@ Each environment receives separate database/auth secrets, uses the same committe
 
 ## CI and release path
 
-GitHub Actions currently runs `npm ci`, lint, typecheck, Vitest, and the production build on pull requests and pushes to `main`. Before production:
+GitHub Actions provisions a PostgreSQL 17 service, applies committed migrations, runs the smoke and real database tests, then runs lint, typecheck, Vitest, and the production build. Before production:
 
 1. Review dependency and migration changes.
 2. Back up the database and verify migration rollback/recovery notes.
@@ -22,9 +22,13 @@ GitHub Actions currently runs `npm ci`, lint, typecheck, Vitest, and the product
 6. Verify logs, security headers, redirects, timezone display, responsive layout, and accessibility.
 7. Roll back the application and restore/forward-fix data according to the migration’s documented recovery plan if verification fails.
 
-## Planned environment variables
+## Environment variables
 
-Names will be finalized with their implementation tasks. Expected categories include a pooled runtime database URL, direct migration URL if required, Auth.js secret/origin configuration, and rate-limit/observability credentials if external services are later approved. A safe `.env.example` will be added only when variables are used.
+- `DATABASE_URL`: runtime application connection, pooled in production when appropriate.
+- `DIRECT_URL`: direct Prisma CLI and migration connection.
+- `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, and `DATABASE_POOL_CONNECTION_TIMEOUT_MS`: optional bounded runtime pool tuning.
+
+The committed `.env.example` contains development-only local values. Real environment files remain ignored. Future Auth.js and observability variables will be documented when introduced.
 
 ## Database considerations
 

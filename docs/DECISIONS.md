@@ -24,14 +24,26 @@ Deactivate catalog/staff records rather than destroying referenced history. Snap
 
 ### ADR-006 — Defer dependencies until their task
 
-The foundation includes only current UI/tooling dependencies and Vitest. Prisma, Auth.js, bcrypt, Zod, and database infrastructure arrive with the first task that uses them, avoiding unused configuration.
+Dependencies arrive with the first task that uses them. TASK-002 added Prisma 7, the PostgreSQL adapter/driver, dotenv, and TS script tooling; Auth.js, bcrypt, and Zod remain deferred.
+
+### ADR-007 — Separate runtime and migration URLs
+
+`DATABASE_URL` is reserved for the application’s pooled runtime connection. Prisma CLI operations prefer `DIRECT_URL` through `prisma7.config.ts`. They are identical locally but can diverge for a future Supabase pooler.
+
+### ADR-008 — Represent weekly availability as local minutes
+
+Recurring availability uses integer minutes after midnight with a weekday, interpreted in the business IANA timezone. A weekly wall-clock rule is not a UTC instant; this representation avoids misleading timestamp conversions and is straightforward to constrain.
+
+### ADR-009 — Active overlap is a database invariant
+
+The initial migration enables `btree_gist` and excludes overlapping `[startAt, endAt)` ranges for the same staff member when status is `PENDING` or `CONFIRMED`. Terminal/historical states do not occupy capacity.
 
 ## Human approval required
 
 | Decision | Options / impact |
 | --- | --- |
-| Studio timezone and default currency | Required before seed data and local-time behavior are finalized. |
-| Pending bookings occupy schedule | Decide whether `PENDING` blocks indefinitely, expires as a short hold, or is omitted in favor of immediate confirmation. This changes the exclusion predicate. |
+| Studio timezone and default currency | Bootstrap is set by TASK-002 to `America/New_York` and USD; business confirmation is still required before production. |
+| Pending hold expiry | `PENDING` currently occupies capacity. Define its expiry/cleanup policy before public booking creation. |
 | Public lookup verification | Reference + email, reference + phone fragment, or signed management token; balance convenience and privacy. |
 | Reschedule history model | Mutate one booking with structured events, or cancel/replace with linked bookings; replacement gives clearer immutable history. |
 | Staff appointment scope | Assigned appointments only, all operational appointments, or configurable permission. |

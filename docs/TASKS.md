@@ -13,6 +13,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** create the PostgreSQL/Prisma persistence baseline.
 - **Deliverables:** local Docker Compose database, Prisma schema/migrations/seed, connection utilities, overlap constraint migration.
 - **Acceptance:** fresh setup and migration succeed; core constraints and representative repository integration tests pass.
+- **Status:** implementation complete; requires Docker-capable environment validation before merge.
 
 ## TASK-003 — Authentication and authorization
 

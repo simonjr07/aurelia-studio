@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum RateLimitAction {
+  LOGIN
+  BOOKING_CREATE
+  PUBLIC_BOOKING_LOOKUP
+}
+
+model User {
+  id                  String               @id @default(uuid()) @db.Uuid
+  email               String               @unique @db.VarChar(320)
+  name                String               @db.VarChar(120)
+  passwordHash        String               @db.VarChar(255)
+  role                Role                 @default(STAFF)
+  status              UserStatus           @default(ACTIVE)
+  createdAt           DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime             @updatedAt @db.Timestamptz(3)
+  staffServices       StaffService[]
+  availabilityRules   AvailabilityRule[]
+  blockedTimes        BlockedTime[]
+  bookings            Booking[]
+  bookingStatusEvents BookingStatusEvent[] @relation("BookingStatusChangedBy")
+
+  @@index([status, role])
+}
+
+model Service {
+  id              String         @id @default(uuid()) @db.Uuid
+  name            String         @db.VarChar(120)
+  slug            String         @unique @db.VarChar(160)
+  description     String         @db.Text
+  durationMinutes Int
+  priceCents      Int
+  currency        String         @default("USD") @db.VarChar(3)
+  isPublished     Boolean        @default(false)
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+  staffServices   StaffService[]
+  bookings        Booking[]
+
+  @@index([isPublished, isActive])
+}
+
+model StaffService {
+  id        String   @id @default(uuid()) @db.Uuid
+  staffId   String   @db.Uuid
+  serviceId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  staff     User     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, serviceId])
+  @@index([serviceId, staffId])
+}
+
+model AvailabilityRule {
+  id                String   @id @default(uuid()) @db.Uuid
+  staffId           String   @db.Uuid
+  weekday           Weekday
+  startLocalMinutes Int
+  endLocalMinutes   Int
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+  staff             User     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, weekday, isActive])
+}
+
+model BlockedTime {
+  id        String   @id @default(uuid()) @db.Uuid
+  staffId   String   @db.Uuid
+  startAt   DateTime @db.Timestamptz(3)
+  endAt     DateTime @db.Timestamptz(3)
+  reason    String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  staff     User     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, startAt, endAt])
+}
+
+model Booking {
+  id                      String               @id @default(uuid()) @db.Uuid
+  publicReference         String               @unique @db.VarChar(32)
+  status                  BookingStatus        @default(PENDING)
+  serviceId               String               @db.Uuid
+  staffId                 String               @db.Uuid
+  customerName            String               @db.VarChar(120)
+  customerEmail           String               @db.VarChar(320)
+  customerPhone           String               @db.VarChar(40)
+  startAt                 DateTime             @db.Timestamptz(3)
+  endAt                   DateTime             @db.Timestamptz(3)
+  timezoneSnapshot        String               @db.VarChar(100)
+  serviceNameSnapshot     String               @db.VarChar(120)
+  serviceDurationSnapshot Int
+  priceCentsSnapshot      Int
+  currencySnapshot        String               @db.VarChar(3)
+  customerNote            String?              @db.VarChar(2000)
+  createdAt               DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime             @updatedAt @db.Timestamptz(3)
+  service                 Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  staff                   User                 @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  statusEvents            BookingStatusEvent[]
+
+  @@index([staffId, startAt, endAt])
+  @@index([serviceId, startAt])
+  @@index([status, startAt])
+}
+
+model BookingStatusEvent {
+  id              String         @id @default(uuid()) @db.Uuid
+  bookingId       String         @db.Uuid
+  fromStatus      BookingStatus?
+  toStatus        BookingStatus
+  changedByUserId String?        @db.Uuid
+  note            String?        @db.VarChar(1000)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  booking         Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  changedByUser   User?          @relation("BookingStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+  @@index([changedByUserId])
+}
+
+model BusinessSettings {
+  id                        String   @id @default("default") @db.VarChar(32)
+  businessName              String   @db.VarChar(120)
+  timezone                  String   @db.VarChar(100)
+  currency                  String   @db.VarChar(3)
+  bookingLeadMinutes        Int
+  bookingHorizonDays        Int
+  slotIntervalMinutes       Int
+  cancellationCutoffMinutes Int
+  rescheduleCutoffMinutes   Int
+  publicEmail               String?  @db.VarChar(320)
+  publicPhone               String?  @db.VarChar(40)
+  createdAt                 DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model RateLimitBucket {
+  id           String          @id @default(uuid()) @db.Uuid
+  action       RateLimitAction
+  keyHash      String          @db.VarChar(128)
+  windowStart  DateTime        @db.Timestamptz(3)
+  requestCount Int             @default(1)
+  expiresAt    DateTime        @db.Timestamptz(3)
+  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([action, keyHash, windowStart])
+  @@index([expiresAt])
+}

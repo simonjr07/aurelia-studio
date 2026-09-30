@@ -1,6 +1,6 @@
 # API and Server Interface Conventions
 
-TASK-003 introduces Auth.js's internal route handler at `/api/auth/[...nextauth]` and first-party login/logout Server Actions. No public business API is implemented yet.
+TASK-005 introduces the public advisory availability endpoint at `/api/availability`; booking mutations are still not implemented.
 
 ## Interface choice
 
@@ -13,7 +13,7 @@ TASK-003 introduces Auth.js's internal route handler at `/api/auth/[...nextauth]
 | Capability | Likely interface | Notes |
 | --- | --- | --- |
 | List/view active services | Server Component query or `GET /api/services` | Public fields only |
-| Query availability | `GET /api/availability` | Bounded date range; rate limited; advisory |
+| Query availability | `GET /api/availability` | One date; validated; dynamic; advisory |
 | Create booking | `POST /api/bookings` or Server Action | Revalidate and enforce conflict atomically |
 | Retrieve public booking | `POST /api/bookings/lookup` | Reference plus verification factor; rate limited |
 | Reschedule/cancel | Server Action or scoped route | Policy, verification, audit, transaction |
@@ -27,7 +27,13 @@ Final paths will be documented when implemented rather than treated as stable no
 - `GET /services/[slug]` returns a server-rendered public detail view or a 404 for missing, unpublished, or inactive services.
 - No JSON service API is introduced: Server Components call the narrow Prisma query boundary directly.
 - Public service results include only name, slug, description, duration, price, and currency plus assigned active staff `{ id, name }` on detail pages.
-- The current CTA is intentionally non-interactive because availability and booking routes do not exist yet.
+- The current CTA is intentionally non-interactive because booking creation does not exist yet; availability is exposed separately through `/api/availability`.
+
+## Implemented availability interface
+
+`GET /api/availability?service=<slug>&date=YYYY-MM-DD&staff=<optional-uuid>` returns one date of advisory candidate slots. The response includes the service identity, studio IANA timezone, UTC `startAt`/`endAt`, a local time label, and eligible public staff `{ id, name }` for each slot. A missing/private service returns `404`; malformed or impossible dates and staff identifiers return `400`; unexpected database/configuration failures return a generic `500`.
+
+The handler is explicitly dynamic and sends `Cache-Control: no-store` because slots depend on the current instant, blocked time, and bookings. It never creates or reserves a booking.
 
 ## Implemented authentication interfaces
 

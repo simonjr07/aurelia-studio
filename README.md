@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 004 public services catalogue**: a PostgreSQL/Prisma data layer, staff authentication foundation, and database-backed public service list/detail experience. Availability calculation, booking, and operational administration are not implemented yet.
+The project currently includes the **Task 005 availability engine**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware candidate-slot calculation, and a safe availability endpoint. Booking creation and operational administration are not implemented yet.
 
 ## Architecture and stack
 
@@ -44,7 +44,7 @@ npm test
 npm run build
 ```
 
-Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:smoke`, and `db:studio`. The services bootstrap is development-only, creates missing slugs, and leaves existing records unchanged. `admin:provision` creates the first active administrator without printing the supplied password.
+Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:smoke`, and `db:studio`. The services bootstrap is development-only, creates missing slugs, and leaves existing records unchanged. Availability rules remain operator/test data rather than automatic production seed data. `admin:provision` creates the first active administrator without printing the supplied password.
 
 ## Documentation
 
@@ -63,4 +63,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database, staff authentication, and public service browsing are implemented. The protected workspace remains deliberately minimal, and service CTAs clearly indicate that availability and booking arrive in later tasks.
+Database, staff authentication, public service browsing, and advisory availability calculation are implemented. Availability does not reserve capacity; transactional booking remains a later task.

@@ -62,6 +62,14 @@ Every public service list, detail, and metadata lookup applies both `isPublished
 
 Keep demo services out of migrations and runtime startup. A dedicated development-only command creates missing unique slugs with empty updates, preserving manual edits and refusing production execution.
 
+### ADR-016 — Luxon owns wall-clock and DST conversion
+
+Use Luxon for IANA-zone conversion rather than JavaScript machine-local `Date` arithmetic or hand-written offset tables. A local grid position that does not exist during spring-forward is skipped; an ambiguous fall-back position deterministically chooses the earlier instant and is emitted once. Candidate durations remain elapsed instant minutes, while local window fit is checked against the requested wall-clock range.
+
+### ADR-017 — Availability is dynamic and advisory
+
+Expose one validated local date through a dynamic `GET /api/availability` route with `no-store` responses. The service aggregates eligible staff by start instant but never assigns or reserves a staff member. TASK-006 remains responsible for transactional revalidation and booking creation.
+
 ## Human approval required
 
 | Decision | Options / impact |

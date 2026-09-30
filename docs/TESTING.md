@@ -32,13 +32,15 @@ Pull requests run install, lint, typecheck, tests, and production build. Feature
 
 ## Current state
 
-TASK-004 adds formatter and catalogue-bootstrap unit tests plus live PostgreSQL coverage for public visibility, deterministic ordering, direct private-slug rejection, active assigned staff, disabled/unrelated staff exclusion, explicit active-admin assignment, and public-safe staff fields. Together with prior work, the suite currently contains 40 tests across ten files.
+TASK-005 adds pure slot-engine coverage for duration, interval-grid alignment, merged windows, gaps, half-open blocks, lead-time and horizon boundaries, spring-forward gaps, fall-back ambiguity, unique instants, and shared blocking statuses. Live PostgreSQL/API coverage verifies service visibility, active assigned staff, disabled/unassigned staff exclusion, pending versus completed bookings, selected staff behavior, safe DTO fields, and endpoint validation. Together with prior work, the suite currently contains 53 tests across twelve files.
 
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
 
 Public catalogue QA runs `npm run db:bootstrap:services`, then checks `/`, `/services`, a real detail slug, invalid/private slugs, keyboard-visible links, responsive layouts, and the deliberately disabled booking CTA. Integration fixtures must be deleted after each run and must not use production data.
+
+Availability QA uses a deterministic fixed clock in tests and checks `/api/availability` with a real service/date, an invalid date, a private service, and optional staff id. DST tests use `America/New_York` explicitly and never depend on the machine timezone. Results are advisory and must not be described as reservations.
 
 Local database test sequence:
 

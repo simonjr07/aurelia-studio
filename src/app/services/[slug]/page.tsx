@@ -126,14 +126,14 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 </dd>
               </div>
             </dl>
-            <span
-              aria-disabled="true"
-              className="mt-8 flex min-h-12 w-full items-center justify-center rounded-full bg-ink/55 px-6 text-sm font-semibold text-cream"
+            <Link
+              className="mt-8 flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 text-sm font-semibold text-cream transition hover:bg-clay"
+              href={`/book/${service.slug}`}
             >
-              Choose a time — coming next
-            </span>
+              Choose a time
+            </Link>
             <p className="mt-4 text-center text-xs leading-5 text-ink/50">
-              Availability and booking are not open yet.
+              Availability is rechecked when you confirm.
             </p>
           </aside>
         </section>

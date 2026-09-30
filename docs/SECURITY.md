@@ -19,9 +19,12 @@
 ## Public bookings and abuse controls
 
 - Generate public booking references with cryptographically secure randomness and enough entropy to resist enumeration.
+- Booking references use a recognizable `AUR-` prefix plus 96 bits from `randomBytes`, encoded as URL-safe base64 without sequential/customer-derived material.
 - Require a second verification factor or signed management token for booking details/changes; do not reveal whether a guessed reference exists.
 - Rate-limit login, availability abuse, booking creation, public lookup, reschedule, and cancellation. Combine coarse IP/network signals with pseudonymous action identifiers where appropriate.
 - Keep PostgreSQL overlap enforcement as the last line of defense against concurrent double booking.
+- Public booking input is a strict allow-list; price, duration, end time, snapshots, status, and availability are always re-derived inside the transaction.
+- Booking throttling permits five attempts per 15-minute window for both normalized email and available network identity. Only HMAC-SHA256 keys are persisted, and failures do not disclose prior bookings.
 
 ## PII and information exposure
 

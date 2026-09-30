@@ -23,7 +23,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Domain (`src/features/<feature>/domain`):** framework-independent rules such as slot calculation, status transitions, cancellation eligibility, and overlap semantics. It accepts typed data and clocks/timezones explicitly.
 - **Application services (`src/features/<feature>/application`):** orchestrate domain rules, authorization, repositories, and transactions for one use case.
 - **Repositories / database (`src/server/db`, feature repositories):** Prisma access, query composition, persistence mapping, and transaction boundaries. Prisma types should not become the public contract of every layer. `src/server/db/prisma.ts` is server-only and owns the pooled runtime singleton.
-- **Authentication (`src/lib/auth`):** Auth.js configuration, credential verification, session shaping, and current-actor resolution.
+- **Authentication (`src/auth.ts`, `src/server/auth`):** Auth.js configuration, credential verification, login abuse controls, session shaping, database-backed current-actor resolution, and role policy.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -39,11 +39,20 @@ src/
       domain/           # Pure business rules and types
       infrastructure/   # Feature repositories/adapters
       ui/               # Feature-specific components
+  server/auth/          # Credential, current-user, rate-limit, and role policy
   server/db/            # Server-only Prisma client and database constants
-  lib/                  # Auth, validation, time, observability
+  lib/                  # Shared validation, time, and observability utilities
 ```
 
 Folders should be created when their first real module exists; empty abstractions are not useful. Route groups may later separate public, staff, and admin shells without changing URLs.
+
+## Authentication and authorization
+
+`/admin/login` is the shared entry point for `STAFF` and `ADMIN`. Auth.js verifies normalized credentials with bcrypt and issues an eight-hour JWT containing only the user id, name, email, and role. JWT data is not the final access decision: every protected render resolves that id against PostgreSQL again and rejects missing or `DISABLED` users. This also makes current database role changes authoritative without waiting for the JWT to expire.
+
+The `/admin` route group has a server-rendered protected layout and repeats the staff policy at its leaf page. Future Server Actions and Route Handlers must call the same server authorization helpers; hiding a navigation item is only presentation. `ADMIN` is reserved for management operations, while the exact appointment and blocked-time resource scope for `STAFF` remains a product decision.
+
+Login attempts use fixed 15-minute PostgreSQL windows with a limit of ten attempts for both the normalized account identifier and an available network signal. Bucket keys are HMAC digests, so raw emails and network values are not stored in the limiter table.
 
 ## Request and mutation rules
 
@@ -75,4 +84,4 @@ Slot results are advisory snapshots. Two customers can see the same slot before 
 
 ## Rendering and dependencies
 
-Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`; runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI/migrations. The driver pool is bounded and cached through a development-safe singleton. Auth.js/bcrypt remain TASK-003 and Zod arrives with the first validated application boundary.
+Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`; runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI/migrations. The driver pool is bounded and created lazily through a development-safe singleton. Auth.js, bcrypt, and Zod are active server-side dependencies as of TASK-003.

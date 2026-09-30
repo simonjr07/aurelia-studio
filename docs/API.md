@@ -1,6 +1,6 @@
 # API and Server Interface Conventions
 
-No application API is implemented in TASK-001. This document establishes the intended contracts.
+TASK-003 introduces Auth.js's internal route handler at `/api/auth/[...nextauth]` and first-party login/logout Server Actions. No public business API is implemented yet.
 
 ## Interface choice
 
@@ -20,6 +20,14 @@ No application API is implemented in TASK-001. This document establishes the int
 | Staff/admin operations | Server Actions by default | Authenticated and resource-authorized |
 
 Final paths will be documented when implemented rather than treated as stable now.
+
+## Implemented authentication interfaces
+
+- `/admin/login` accepts email and password through a Server Action and always presents a generic failure message.
+- `/api/auth/[...nextauth]` is owned by Auth.js and supplies the credentials/session endpoints.
+- `/admin` is protected on the server. Missing, deleted, or disabled identities redirect to `/admin/login`.
+- `requireStaff()` and `requireAdmin()` are the authoritative entry-point policies for future pages, actions, and handlers. Every protected mutation must invoke an appropriate policy again, even when nested below a protected layout.
+- Successful login redirects to the fixed internal `/admin` destination; untrusted form data does not choose a callback URL.
 
 ## Contract rules
 

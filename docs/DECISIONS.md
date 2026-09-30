@@ -22,9 +22,9 @@ Persist actual appointment instants with timezone-aware types. Evaluate recurrin
 
 Deactivate catalog/staff records rather than destroying referenced history. Snapshot booking-critical service values and append status events.
 
-### ADR-006 — Defer dependencies until their task
+### ADR-006 — Add dependencies only when their boundary exists
 
-Dependencies arrive with the first task that uses them. TASK-002 added Prisma 7, the PostgreSQL adapter/driver, dotenv, and TS script tooling; Auth.js, bcrypt, and Zod remain deferred.
+Dependencies arrive with the first task that uses them. TASK-002 added Prisma 7, the PostgreSQL adapter/driver, dotenv, and TS script tooling. TASK-003 added Auth.js, bcrypt, and Zod for implemented authentication boundaries.
 
 ### ADR-007 — Separate runtime and migration URLs
 
@@ -37,6 +37,18 @@ Recurring availability uses integer minutes after midnight with a weekday, inter
 ### ADR-009 — Active overlap is a database invariant
 
 The initial migration enables `btree_gist` and excludes overlapping `[startAt, endAt)` ranges for the same staff member when status is `PENDING` or `CONFIRMED`. Terminal/historical states do not occupy capacity.
+
+### ADR-010 — Short JWT session plus database-backed current identity
+
+Use an eight-hour Auth.js JWT containing a narrow identity snapshot, but re-read the user on every protected request. This avoids a session table while making account deletion, disablement, and role changes authoritative immediately at the application boundary.
+
+### ADR-011 — One staff login and one protected workspace
+
+`STAFF` and `ADMIN` share `/admin/login` and `/admin`. Server policy determines access; role-filtered navigation is only a convenience. Separate login surfaces would duplicate identity handling without strengthening authorization.
+
+### ADR-012 — Pseudonymous persistent login throttling
+
+Enforce ten attempts per 15-minute fixed window for both normalized account and available network identity. Store only HMAC-SHA256 identities and counters in PostgreSQL so throttling works across application instances without persisting raw emails or network values.
 
 ## Human approval required
 

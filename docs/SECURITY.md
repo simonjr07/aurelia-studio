@@ -2,10 +2,11 @@
 
 ## Identity and access
 
-- Use Auth.js credentials authentication for staff users only.
-- Hash passwords with bcrypt using an intentionally selected work factor; never encrypt or log plaintext passwords.
-- Use generic authentication errors, secure session cookies, session rotation/expiry, and inactive-account checks.
-- Authorize every protected server operation by role and resource scope. UI visibility, route naming, and client state are not controls.
+- Auth.js credentials authentication is restricted to staff users stored in PostgreSQL.
+- Passwords are hashed with bcrypt work factor 12; plaintext passwords are never returned, persisted, or logged.
+- Authentication failures are generic. The JWT expires after eight hours and contains only id, name, email, and role.
+- Every protected request re-reads the user so deleted or disabled accounts are denied and role changes take effect without waiting for expiry.
+- Authorize every protected server operation with `requireStaff()` or `requireAdmin()` plus the future resource-scope policy. UI visibility, route naming, and client state are not controls.
 - Reserve service/staff/settings administration for `ADMIN`; document and test each `STAFF` permission.
 
 ## Input and mutation safety
@@ -36,6 +37,8 @@
 - Use separate development, preview, and production credentials with least privilege and rotation support.
 - Never commit database URLs, Auth.js secrets, passwords, tokens, or production customer data.
 - Prevent public environment prefixes from being applied to server secrets.
+
+`AUTH_SECRET` signs authentication state. `RATE_LIMIT_SECRET` independently HMACs login-limiter identities and must be at least 32 characters. Administrator provisioning reads credentials from process environment variables and refuses production execution unless both the documented mode flag and exact confirmation phrase are supplied.
 
 ## Operational hardening
 

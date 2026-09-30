@@ -23,7 +23,7 @@ The schema defines:
 - `Booking` with `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, and `NO_SHOW` states.
 - Append-only `BookingStatusEvent` rows with an optional authenticated actor.
 - Singleton `BusinessSettings` for timezone, currency, booking rules, and public contacts.
-- `RateLimitBucket` keyed by action, a future HMAC/hash value, and window start for login, booking creation, and public lookup.
+- `RateLimitBucket` keyed by action, an HMAC identity, and window start for login, booking creation, and public lookup. TASK-003 actively uses `LOGIN`; other actions remain future work.
 
 Internal identifiers are UUIDs. Customer accounts are intentionally absent. Services and staff referenced by bookings use restrictive deletion, while every booking snapshots the service name, duration, price, currency, and timezone so catalog changes cannot rewrite history.
 
@@ -54,6 +54,10 @@ The half-open `[startAt, endAt)` range allows adjacent appointments. PostgreSQL 
 ## Business settings bootstrap
 
 The migration inserts the fixed `default` settings row with `ON CONFLICT DO NOTHING`: Aurelia Studio, `America/New_York`, USD, 60-minute lead time, 60-day horizon, 15-minute interval, 120-minute cancellation cutoff, and 240-minute reschedule cutoff. `npm run db:bootstrap` performs an idempotent create-only upsert and never overwrites later administrative changes.
+
+## Login rate-limit persistence
+
+The authentication adapter stores fixed-window login counters in `RateLimitBucket`. Account and available network identifiers are separately HMAC-SHA256 digested with `RATE_LIMIT_SECRET`; plaintext emails and network values are never bucket keys. Atomic PostgreSQL upserts increment each counter, and authentication is rejected once either identity reaches ten attempts in a 15-minute window. Expired buckets are safe to remove in future maintenance work.
 
 ## Remaining design decisions
 

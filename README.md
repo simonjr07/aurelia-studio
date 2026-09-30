@@ -10,11 +10,11 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 002 database foundation**. Booking UI, availability calculation, authentication, and administration are not implemented yet.
+The project currently includes the **Task 003 authentication foundation**: a PostgreSQL/Prisma data layer, staff-only Auth.js credentials sign-in, database-backed session revalidation, role policies, and a protected workspace shell. Booking UI, availability calculation, and operational administration are not implemented yet.
 
 ## Architecture and stack
 
-The planned request path is Browser → Next.js App Router → server-side application/domain logic → Prisma → PostgreSQL. Production will use Vercel and Supabase PostgreSQL. The stack also includes TypeScript, Tailwind CSS, Auth.js, bcrypt, Zod, Vitest, Docker Compose, and GitHub Actions as their roadmap tasks are introduced.
+The request path is Browser → Next.js App Router/Auth.js → server-side application/domain logic → Prisma → PostgreSQL. Production will use Vercel and Supabase PostgreSQL. The stack includes TypeScript, Tailwind CSS, Auth.js, bcrypt, Zod, Vitest, Docker Compose, and GitHub Actions.
 
 ## Local development
 
@@ -26,6 +26,9 @@ Copy-Item .env.example .env # PowerShell; keep .env uncommitted
 docker compose up -d db
 npm run db:migrate
 npm run db:smoke
+# Add development AUTH_SECRET and RATE_LIMIT_SECRET values to .env.
+# Then provide ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD in your shell:
+npm run admin:provision
 npm run dev
 ```
 
@@ -40,7 +43,7 @@ npm test
 npm run build
 ```
 
-Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:smoke`, and `db:studio`.
+Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:smoke`, and `db:studio`. `admin:provision` creates the first active administrator without printing the supplied password.
 
 ## Documentation
 
@@ -59,4 +62,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database foundation implemented. Local migration/integration validation requires PostgreSQL; no production services or credentials are required at this stage.
+Database and staff authentication foundations are implemented. The protected workspace is deliberately a shell: later tasks will add real booking and administration capabilities.

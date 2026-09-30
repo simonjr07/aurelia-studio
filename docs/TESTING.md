@@ -32,7 +32,11 @@ Pull requests run install, lint, typecheck, tests, and production build. Feature
 
 ## Current state
 
-TASK-002 adds unit checks for the approved business defaults and live PostgreSQL integration coverage for `StaffService` uniqueness and the manual overlap constraint. The database suite proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
+TASK-003 adds unit coverage for email normalization and validation, correct/incorrect credentials, timing work for unknown users, inactive users, safe returned identity fields, current database account state, staff/admin policy, provisioning guards, bcrypt hashing, and account/network login throttling. Together with TASK-002, the suite currently contains 28 tests across seven files.
+
+The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
+
+Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
 
 Local database test sequence:
 

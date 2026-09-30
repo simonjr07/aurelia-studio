@@ -27,8 +27,14 @@ GitHub Actions provisions a PostgreSQL 17 service, applies committed migrations,
 - `DATABASE_URL`: runtime application connection, pooled in production when appropriate.
 - `DIRECT_URL`: direct Prisma CLI and migration connection.
 - `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_TIMEOUT_MS`, and `DATABASE_POOL_CONNECTION_TIMEOUT_MS`: optional bounded runtime pool tuning.
+- `AUTH_SECRET`: high-entropy Auth.js signing secret.
+- `RATE_LIMIT_SECRET`: independent high-entropy HMAC key for pseudonymous login limiter identities; at least 32 characters.
+- `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`: short-lived operator inputs for `npm run admin:provision`; unset after use.
+- `ADMIN_PROVISION_MODE=production` and `ADMIN_PROVISION_CONFIRM=PROVISION_AURELIA_ADMIN_IN_PRODUCTION`: explicit dual guard required only when provisioning with `NODE_ENV=production`.
 
-The committed `.env.example` contains development-only local values. Real environment files remain ignored. Future Auth.js and observability variables will be documented when introduced.
+The committed `.env.example` contains development-only local database values and empty secret placeholders. Real environment files remain ignored. Auth.js trusts the deployment's validated host headers rather than requiring a hard-coded `AUTH_URL`; the platform must therefore reject arbitrary host headers at its edge. Preview and production secrets must be generated independently.
+
+Provision the first production administrator as a controlled one-off operation after migrations and before staff QA. Supply the guarded variables only for that process, verify the generic success message, then remove them from the operator environment. The command refuses duplicate emails and does not print the password.
 
 ## Database considerations
 

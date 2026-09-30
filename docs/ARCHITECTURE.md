@@ -26,6 +26,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Authentication (`src/auth.ts`, `src/server/auth`):** Auth.js configuration, credential verification, login abuse controls, session shaping, database-backed current-actor resolution, and role policy.
 - **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible-staff projection, and development catalogue bootstrap policy.
 - **Availability (`src/server/availability`):** pure wall-clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity-blocking bookings to the domain core.
+- **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database-conflict translation.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -66,7 +67,13 @@ Eligible professionals are fetched in the detail query, avoiding an N+1 pattern.
 
 `generateAvailabilitySlots()` is framework- and database-independent. It merges overlapping local availability windows, anchors starts to the studio-local midnight grid, rejects starts whose wall-clock time does not exist, measures service duration in elapsed instants, and applies half-open overlap checks for blocks and bookings. Fall-back ambiguous local times choose the earlier instant exactly once. The service layer performs one service/staff query followed by bounded rules, block, and booking queries for the requested local day; it aggregates identical start instants across eligible staff without assigning anyone.
 
-The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLeadMinutes`, `bookingHorizonDays`, and `slotIntervalMinutes`. Horizon boundaries are inclusive (`local today + bookingHorizonDays`), and a slot exactly at `now + lead time` is allowed. Availability is an advisory snapshot only; TASK-006 must revalidate and reserve capacity transactionally.
+The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLeadMinutes`, `bookingHorizonDays`, and `slotIntervalMinutes`. Horizon boundaries are inclusive (`local today + bookingHorizonDays`), and a slot exactly at `now + lead time` is allowed. Availability remains an advisory snapshot.
+
+## Public booking creation
+
+`/book/[slug]` is a focused client-state flow for staff, date, time, details, review, and confirmation. The browser fetches candidate slots but submits only identifiers and contact input. `createPublicBooking()` validates again and opens one interactive Prisma transaction. Inside it, the service and settings are re-read, the existing availability adapter runs against the transaction client, a specific staff member is verified or an available staff member is selected, authoritative end time/snapshots are derived, and the `PENDING` booking plus initial status event are inserted atomically.
+
+“Any available” sorts the slot’s currently eligible staff by stable UUID and chooses the first. Specific-staff requests never switch silently. The outer reference-collision loop retries the entire transaction because PostgreSQL aborts a transaction after a unique violation. A PostgreSQL active-overlap violation is translated to a safe domain conflict; the exclusion constraint remains authoritative when concurrent transactions both pass advisory revalidation.
 
 ## Request and mutation rules
 
@@ -87,7 +94,7 @@ Availability generation will:
 5. Apply lead time, booking horizon, slot interval, and boundary rules.
 6. Keep only candidates whose entire service interval fits and return timezone-labeled results.
 
-Slot results are advisory snapshots. Two customers can see the same slot before either submits. Final creation must revalidate all rules on the server and atomically prevent overlapping active bookings at the PostgreSQL layer. The implemented migration uses a half-open interval `[startAt, endAt)` and a partial PostgreSQL GiST exclusion constraint over staff and `tstzrange`, limited to `PENDING` and `CONFIRMED`. A transaction and friendly conflict response complete the future workflow; a UI check alone is never sufficient.
+Slot results are advisory snapshots. Two customers can see the same slot before either submits. Final creation revalidates all rules on the server and atomically prevents overlapping active bookings at the PostgreSQL layer. The migration uses a half-open interval `[startAt, endAt)` and a partial PostgreSQL GiST exclusion constraint over staff and `tstzrange`, limited to `PENDING` and `CONFIRMED`; a UI check is never sufficient.
 
 ## Time and data conventions
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { DateTime } from "luxon";
 
+import type { Prisma, PrismaClient } from "../../generated/prisma/client";
 import { Weekday } from "../../generated/prisma/enums";
 import { getPrismaClient } from "../db/prisma";
 
@@ -78,13 +79,17 @@ function toInterval(startAt: Date, endAt: Date): InstantInterval {
   return { startAt, endAt };
 }
 
-export async function getServiceAvailability({
+type AvailabilityDatabase = PrismaClient | Prisma.TransactionClient;
+
+export async function getServiceAvailabilityWithDatabase(
+  prisma: AvailabilityDatabase,
+  {
   serviceSlug,
   date,
   staffId,
   now = new Date(),
-}: GetServiceAvailabilityInput): Promise<ServiceAvailability> {
-  const prisma = getPrismaClient();
+  }: GetServiceAvailabilityInput,
+): Promise<ServiceAvailability> {
   const [settings, service] = await Promise.all([
     prisma.businessSettings.findUnique({
       where: { id: "default" },
@@ -236,4 +241,10 @@ export async function getServiceAvailability({
         eligibleStaff: slot.eligibleStaff,
       })),
   };
+}
+
+export function getServiceAvailability(
+  input: GetServiceAvailabilityInput,
+): Promise<ServiceAvailability> {
+  return getServiceAvailabilityWithDatabase(getPrismaClient(), input);
 }

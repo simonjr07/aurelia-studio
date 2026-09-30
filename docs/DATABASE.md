@@ -23,7 +23,7 @@ The schema defines:
 - `Booking` with `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, and `NO_SHOW` states.
 - Append-only `BookingStatusEvent` rows with an optional authenticated actor.
 - Singleton `BusinessSettings` for timezone, currency, booking rules, and public contacts.
-- `RateLimitBucket` keyed by action, an HMAC identity, and window start for login, booking creation, and public lookup. TASK-003 actively uses `LOGIN`; other actions remain future work.
+- `RateLimitBucket` keyed by action, an HMAC identity, and window start. `LOGIN` and `BOOKING_CREATE` are active; public lookup remains future work.
 
 Internal identifiers are UUIDs. Customer accounts are intentionally absent. Services and staff referenced by bookings use restrictive deletion, while every booking snapshots the service name, duration, price, currency, and timezone so catalog changes cannot rewrite history.
 
@@ -65,9 +65,17 @@ Public service queries require both `isPublished` and `isActive`. Detail queries
 
 TASK-005 uses the existing `Service`, `StaffService`, `User`, `AvailabilityRule`, `BlockedTime`, `Booking`, and `BusinessSettings` models; no schema or migration change was required. The Prisma adapter fetches the active published service and assigned active staff, then loads only matching weekday rules and intervals intersecting the requested studio-local day. Booking reads filter to `PENDING` and `CONFIRMED`, matching the existing PostgreSQL exclusion constraint; `COMPLETED`, `CANCELLED`, and `NO_SHOW` do not block candidates.
 
+## Booking writes and snapshots
+
+TASK-006 also requires no schema or migration change. A single database transaction creates the `PENDING` `Booking` and its `BookingStatusEvent` (`null → PENDING`, no actor). The booking stores service name, duration, price, currency, and business timezone read inside that transaction; client values cannot populate snapshots. The unique opaque reference is retried by rerunning the whole transaction on the extremely unlikely collision. The GiST exclusion constraint converts the losing concurrent insert into a public conflict without leaving a booking or orphan event.
+
+`npm run db:bootstrap:booking-demo` is an optional development-only, create-only bootstrap. It creates two non-login demo staff with undisclosed random credential material, assigns public active services, and adds missing weekday 09:00–17:00 rules. It refuses production and never overwrites existing records.
+
 ## Login rate-limit persistence
 
 The authentication adapter stores fixed-window login counters in `RateLimitBucket`. Account and available network identifiers are separately HMAC-SHA256 digested with `RATE_LIMIT_SECRET`; plaintext emails and network values are never bucket keys. Atomic PostgreSQL upserts increment each counter, and authentication is rejected once either identity reaches ten attempts in a 15-minute window. Expired buckets are safe to remove in future maintenance work.
+
+Booking creation uses the same persistence pattern with separate `BOOKING_CREATE` buckets: five attempts per 15-minute fixed window for normalized email and available network identity.
 
 ## Remaining design decisions
 

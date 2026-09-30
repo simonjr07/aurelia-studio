@@ -41,6 +41,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** safely create public bookings.
 - **Deliverables:** validated details/review flow, transactional creation, public reference, status event, rate limiting.
 - **Acceptance:** concurrent requests cannot overlap the same staff member; errors are safe; happy and failure paths are tested.
+- **Status:** implementation complete; staged responsive UI, transactional revalidation, deterministic assignment, snapshots, initial event, opaque reference, persistent throttling, API outcomes, and a real concurrent PostgreSQL race are covered. Public management remains TASK-007.
 
 ## TASK-007 — Public booking management
 

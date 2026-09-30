@@ -32,7 +32,11 @@ Pull requests run install, lint, typecheck, tests, and production build. Feature
 
 ## Current state
 
-TASK-005 adds pure slot-engine coverage for duration, interval-grid alignment, merged windows, gaps, half-open blocks, lead-time and horizon boundaries, spring-forward gaps, fall-back ambiguity, unique instants, and shared blocking statuses. Live PostgreSQL/API coverage verifies service visibility, active assigned staff, disabled/unassigned staff exclusion, pending versus completed bookings, selected staff behavior, safe DTO fields, and endpoint validation. Together with prior work, the suite currently contains 53 tests across twelve files.
+TASK-005 adds pure slot-engine coverage for duration, interval-grid alignment, merged windows, gaps, half-open blocks, lead-time and horizon boundaries, spring-forward gaps, fall-back ambiguity, unique instants, and shared blocking statuses. Live PostgreSQL/API coverage verifies service visibility, active assigned staff, disabled/unassigned staff exclusion, pending versus completed bookings, selected staff behavior, safe DTO fields, and endpoint validation.
+
+TASK-006 adds deterministic reference and booking-limiter unit tests plus live PostgreSQL booking-service/API integration. Coverage proves authoritative snapshots/end time, normalized contact data, atomic initial status history, specific-staff rejection, deterministic any-available fallback, unavailable-service hiding, whole-transaction collision retry, safe response fields/statuses, and throttling. Its concurrency test launches two real creates for the same staff/instant and asserts exactly one booking commits while the loser becomes `BookingConflictError`.
+
+The current suite contains 65 passing tests across 15 files when PostgreSQL is configured; database suites are not mocked.
 
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
@@ -41,6 +45,8 @@ Manual authentication QA should verify keyboard/paste-friendly sign-in, generic 
 Public catalogue QA runs `npm run db:bootstrap:services`, then checks `/`, `/services`, a real detail slug, invalid/private slugs, keyboard-visible links, responsive layouts, and the deliberately disabled booking CTA. Integration fixtures must be deleted after each run and must not use production data.
 
 Availability QA uses a deterministic fixed clock in tests and checks `/api/availability` with a real service/date, an invalid date, a private service, and optional staff id. DST tests use `America/New_York` explicitly and never depend on the machine timezone. Results are advisory and must not be described as reservations.
+
+Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bootstrap:booking-demo`. Verify specific and any-professional paths, date/time reloads, contact field errors, review, pending confirmation/reference, persisted booking/event, disappearance of the occupied slot, keyboard focus, mobile layout, pending-button lockout, and friendly stale-slot recovery. Demo bootstrap data is development-only and must never target production.
 
 Local database test sequence:
 

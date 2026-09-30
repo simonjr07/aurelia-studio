@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 005 availability engine**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware candidate-slot calculation, and a safe availability endpoint. Booking creation and operational administration are not implemented yet.
+The project currently includes the **Task 006 public booking flow**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware availability, and concurrency-safe transactional booking creation. Public booking management and operational administration are not implemented yet.
 
 ## Architecture and stack
 
@@ -27,6 +27,7 @@ docker compose up -d db
 npm run db:migrate
 npm run db:smoke
 npm run db:bootstrap:services # create missing development catalogue entries
+npm run db:bootstrap:booking-demo # optional create-only staff/schedule demo data
 # Add development AUTH_SECRET and RATE_LIMIT_SECRET values to .env.
 # Then provide ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD in your shell:
 npm run admin:provision
@@ -44,7 +45,7 @@ npm test
 npm run build
 ```
 
-Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:smoke`, and `db:studio`. The services bootstrap is development-only, creates missing slugs, and leaves existing records unchanged. Availability rules remain operator/test data rather than automatic production seed data. `admin:provision` creates the first active administrator without printing the supplied password.
+Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:bootstrap:booking-demo`, `db:smoke`, and `db:studio`. Both catalogue/demo bootstraps are development-only and create missing data without overwriting existing records. Demo staff receive random, undisclosed credential material and are for scheduling QA, not sign-in. `admin:provision` creates the first active administrator without printing the supplied password.
 
 ## Documentation
 
@@ -63,4 +64,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database, staff authentication, public service browsing, and advisory availability calculation are implemented. Availability does not reserve capacity; transactional booking remains a later task.
+Database, staff authentication, public service browsing, advisory availability, and transactional public booking creation are implemented. Booking lookup, cancellation, and rescheduling remain later tasks.

@@ -68,7 +68,19 @@ Use Luxon for IANA-zone conversion rather than JavaScript machine-local `Date` a
 
 ### ADR-017 — Availability is dynamic and advisory
 
-Expose one validated local date through a dynamic `GET /api/availability` route with `no-store` responses. The service aggregates eligible staff by start instant but never assigns or reserves a staff member. TASK-006 remains responsible for transactional revalidation and booking creation.
+Expose one validated local date through a dynamic `GET /api/availability` route with `no-store` responses. The service aggregates eligible staff by start instant but never assigns or reserves a staff member; TASK-006 performs transactional revalidation and creation separately.
+
+### ADR-018 — Revalidate and create within one booking transaction
+
+The availability response is never trusted at submission. Re-run the TASK-005 engine against the transaction client, then derive end time and snapshots and create the booking plus initial event in the same transaction. PostgreSQL’s exclusion constraint resolves races after application revalidation.
+
+### ADR-019 — Deterministic any-available assignment
+
+For the requested instant, sort currently available eligible staff by stable UUID and choose the first. This is predictable and race-safe with the overlap constraint; fairness/rotation can be introduced later if the business chooses it.
+
+### ADR-020 — Opaque references and pseudonymous booking throttling
+
+Use `AUR-` plus 96 cryptographically random URL-safe bits (20 characters total), retrying the whole transaction on unique collision. Enforce five attempts per 15 minutes for both normalized email and available network identity, persisted only as HMAC-SHA256 bucket keys.
 
 ## Human approval required
 
@@ -83,4 +95,3 @@ Expose one validated local date through a dynamic `GET /api/availability` route 
 | Cancellation/reschedule cutoffs | Define customer and staff policies, reasons, and override authority. |
 | Data retention | Retention/deletion periods for contact data, audit events, logs, and expired rate-limit records. |
 | Opening-hours model | Structured child rows are normalized; JSON settings are simpler but harder to constrain/query. |
-| “Any available” assignment | Earliest slot, fair rotation, deterministic ordering, or another business preference. |

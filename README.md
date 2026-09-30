@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 003 authentication foundation**: a PostgreSQL/Prisma data layer, staff-only Auth.js credentials sign-in, database-backed session revalidation, role policies, and a protected workspace shell. Booking UI, availability calculation, and operational administration are not implemented yet.
+The project currently includes the **Task 004 public services catalogue**: a PostgreSQL/Prisma data layer, staff authentication foundation, and database-backed public service list/detail experience. Availability calculation, booking, and operational administration are not implemented yet.
 
 ## Architecture and stack
 
@@ -26,6 +26,7 @@ Copy-Item .env.example .env # PowerShell; keep .env uncommitted
 docker compose up -d db
 npm run db:migrate
 npm run db:smoke
+npm run db:bootstrap:services # create missing development catalogue entries
 # Add development AUTH_SECRET and RATE_LIMIT_SECRET values to .env.
 # Then provide ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD in your shell:
 npm run admin:provision
@@ -43,7 +44,7 @@ npm test
 npm run build
 ```
 
-Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:smoke`, and `db:studio`. `admin:provision` creates the first active administrator without printing the supplied password.
+Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:smoke`, and `db:studio`. The services bootstrap is development-only, creates missing slugs, and leaves existing records unchanged. `admin:provision` creates the first active administrator without printing the supplied password.
 
 ## Documentation
 
@@ -62,4 +63,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database and staff authentication foundations are implemented. The protected workspace is deliberately a shell: later tasks will add real booking and administration capabilities.
+Database, staff authentication, and public service browsing are implemented. The protected workspace remains deliberately minimal, and service CTAs clearly indicate that availability and booking arrive in later tasks.

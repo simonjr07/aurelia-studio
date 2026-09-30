@@ -21,6 +21,14 @@ TASK-003 introduces Auth.js's internal route handler at `/api/auth/[...nextauth]
 
 Final paths will be documented when implemented rather than treated as stable now.
 
+## Implemented public service interface
+
+- `GET /services` is a server-rendered public catalogue of published, active services.
+- `GET /services/[slug]` returns a server-rendered public detail view or a 404 for missing, unpublished, or inactive services.
+- No JSON service API is introduced: Server Components call the narrow Prisma query boundary directly.
+- Public service results include only name, slug, description, duration, price, and currency plus assigned active staff `{ id, name }` on detail pages.
+- The current CTA is intentionally non-interactive because availability and booking routes do not exist yet.
+
 ## Implemented authentication interfaces
 
 - `/admin/login` accepts email and password through a Server Action and always presents a generic failure message.

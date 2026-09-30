@@ -50,6 +50,18 @@ Use an eight-hour Auth.js JWT containing a narrow identity snapshot, but re-read
 
 Enforce ten attempts per 15-minute fixed window for both normalized account and available network identity. Store only HMAC-SHA256 identities and counters in PostgreSQL so throttling works across application instances without persisting raw emails or network values.
 
+### ADR-013 — Public visibility is a query invariant
+
+Every public service list, detail, and metadata lookup applies both `isPublished = true` and `isActive = true`. Direct private slugs return 404 rather than relying on UI filtering. Public projections are explicit and never expose complete database records.
+
+### ADR-014 — Explicit assignment makes an active user service-eligible
+
+`StaffService` is the deliberate bookability signal for the current schema. An assigned active `STAFF` or `ADMIN` may be named publicly; an administrator is never included merely because of role. Availability rules will add time-specific eligibility in TASK-005.
+
+### ADR-015 — Development catalogue bootstrap is create-only
+
+Keep demo services out of migrations and runtime startup. A dedicated development-only command creates missing unique slugs with empty updates, preserving manual edits and refusing production execution.
+
 ## Human approval required
 
 | Decision | Options / impact |

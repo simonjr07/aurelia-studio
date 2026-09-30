@@ -24,6 +24,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Application services (`src/features/<feature>/application`):** orchestrate domain rules, authorization, repositories, and transactions for one use case.
 - **Repositories / database (`src/server/db`, feature repositories):** Prisma access, query composition, persistence mapping, and transaction boundaries. Prisma types should not become the public contract of every layer. `src/server/db/prisma.ts` is server-only and owns the pooled runtime singleton.
 - **Authentication (`src/auth.ts`, `src/server/auth`):** Auth.js configuration, credential verification, login abuse controls, session shaping, database-backed current-actor resolution, and role policy.
+- **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible-staff projection, and development catalogue bootstrap policy.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -53,6 +54,12 @@ Folders should be created when their first real module exists; empty abstraction
 The `/admin` route group has a server-rendered protected layout and repeats the staff policy at its leaf page. Future Server Actions and Route Handlers must call the same server authorization helpers; hiding a navigation item is only presentation. `ADMIN` is reserved for management operations, while the exact appointment and blocked-time resource scope for `STAFF` remains a product decision.
 
 Login attempts use fixed 15-minute PostgreSQL windows with a limit of ten attempts for both the normalized account identifier and an available network signal. Bucket keys are HMAC digests, so raw emails and network values are not stored in the limiter table.
+
+## Public service catalogue
+
+`/services` and `/services/[slug]` are Server Component routes that query Prisma directly through the public-service boundary. Both list and detail require `isPublished = true` and `isActive = true`; a missing or private slug produces `notFound()` before page content is rendered. Queries use allow-listed selections and deterministic name/slug ordering rather than serializing complete Prisma records.
+
+Eligible professionals are fetched in the detail query, avoiding an N+1 pattern. Only explicitly assigned, `ACTIVE` users are eligible, and only `id` and `name` leave the repository. An assigned active `ADMIN` may appear because the assignment is deliberate and administrators already satisfy staff-level operational policy; role itself is never exposed publicly. Future availability logic will further determine who can serve a concrete time.
 
 ## Request and mutation rules
 

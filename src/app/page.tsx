@@ -1,3 +1,8 @@
+import Link from "next/link";
+
+import { PublicFooter } from "@/components/public/public-footer";
+import { PublicHeader } from "@/components/public/public-header";
+
 const values = [
   ["Considered services", "A curated menu designed around your time and wellbeing."],
   ["Flexible scheduling", "Choose the professional, date, and time that suit you."],
@@ -7,14 +12,7 @@ const values = [
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-cream text-ink">
-      <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-7 sm:px-10 lg:px-12" aria-label="Primary navigation">
-        <a className="font-display text-xl tracking-[0.18em]" href="#top" aria-label="Aurelia Studio home">
-          AURELIA
-        </a>
-        <span className="rounded-full border border-ink/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/65">
-          Booking experience in development
-        </span>
-      </nav>
+      <PublicHeader />
 
       <section id="top" className="relative mx-auto grid min-h-[650px] w-full max-w-7xl items-center gap-14 px-6 py-16 sm:px-10 lg:grid-cols-[1.08fr_0.92fr] lg:px-12 lg:py-24">
         <div className="relative z-10 max-w-3xl">
@@ -24,12 +22,16 @@ export default function Home() {
             <span className="block italic text-clay">beautifully scheduled.</span>
           </h1>
           <p className="mt-9 max-w-xl text-lg leading-8 text-ink/65 sm:text-xl">
-            Aurelia Studio is creating a calm, effortless way to discover services and reserve time with trusted beauty and wellness professionals.
+            Discover considered beauty and wellness services with clear timing,
+            pricing, and the professionals who provide them.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-5">
-            <span className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-sm font-semibold text-cream shadow-lg shadow-ink/10" aria-disabled="true">
-              Online booking coming soon
-            </span>
+            <Link
+              className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-sm font-semibold text-cream shadow-lg shadow-ink/10 transition hover:bg-clay"
+              href="/services"
+            >
+              Explore services
+            </Link>
             <a className="text-sm font-semibold underline decoration-clay/50 underline-offset-8 transition hover:decoration-clay" href="#experience">
               Explore the experience
             </a>
@@ -60,10 +62,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-8 text-xs uppercase tracking-[0.15em] text-ink/45 sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-12">
-        <p>© {new Date().getFullYear()} Aurelia Studio</p>
-        <p>Premium appointment care</p>
-      </footer>
+      <PublicFooter />
     </main>
   );
 }

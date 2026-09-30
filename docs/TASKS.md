@@ -27,6 +27,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** let customers discover bookable services.
 - **Deliverables:** responsive service list/detail pages and active service queries.
 - **Acceptance:** only public active data is exposed; loading/empty/error states and accessibility checks pass.
+- **Status:** implementation complete; public queries, development catalogue, responsive list/detail UI, metadata, formatter tests, and live PostgreSQL visibility tests pass. Availability and booking remain intentionally unavailable.
 
 ## TASK-005 — Availability engine
 

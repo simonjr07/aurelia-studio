@@ -32,11 +32,13 @@ Pull requests run install, lint, typecheck, tests, and production build. Feature
 
 ## Current state
 
-TASK-003 adds unit coverage for email normalization and validation, correct/incorrect credentials, timing work for unknown users, inactive users, safe returned identity fields, current database account state, staff/admin policy, provisioning guards, bcrypt hashing, and account/network login throttling. Together with TASK-002, the suite currently contains 28 tests across seven files.
+TASK-004 adds formatter and catalogue-bootstrap unit tests plus live PostgreSQL coverage for public visibility, deterministic ordering, direct private-slug rejection, active assigned staff, disabled/unrelated staff exclusion, explicit active-admin assignment, and public-safe staff fields. Together with prior work, the suite currently contains 40 tests across ten files.
 
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
+
+Public catalogue QA runs `npm run db:bootstrap:services`, then checks `/`, `/services`, a real detail slug, invalid/private slugs, keyboard-visible links, responsive layouts, and the deliberately disabled booking CTA. Integration fixtures must be deleted after each run and must not use production data.
 
 Local database test sequence:
 

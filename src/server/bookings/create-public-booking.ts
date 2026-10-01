@@ -64,7 +64,24 @@ function isOverlapConflict(error: unknown) {
     return false;
   }
 
-  return error.code === "P2004" || error.code === "P2034";
+  if (error.code === "P2004" || error.code === "P2034") {
+    return true;
+  }
+
+  const adapterCause = (
+    error.meta as
+      | {
+          driverAdapterError?: {
+            cause?: { code?: unknown; originalCode?: unknown };
+          };
+        }
+      | undefined
+  )?.driverAdapterError?.cause;
+
+  return (
+    error.code === "P2039" &&
+    (adapterCause?.originalCode === "23P01" || adapterCause?.code === "23P01")
+  );
 }
 
 async function createWithReference(

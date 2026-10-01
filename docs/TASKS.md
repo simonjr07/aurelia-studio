@@ -69,6 +69,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** maintain regular and exceptional schedules.
 - **Deliverables:** opening/staff availability editors and blocked-time workflows.
 - **Acceptance:** invalid ranges are rejected; authorization and downstream slot changes are tested.
+- **Status:** implementation complete; role-scoped weekly window and blocked-time create/delete workflows, studio-timezone conversion, overlap and active-booking protection, disabled-staff policy, and real availability-engine effect tests are included.
 
 ## TASK-011 — Rescheduling and cancellation
 

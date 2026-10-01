@@ -6,6 +6,8 @@ TASK-008 adds authenticated `POST /api/admin/appointments/[id]/status`. Its stri
 
 TASK-009 adds administrator-only `POST /api/admin/services`, `PATCH /api/admin/services/[id]`, `POST /api/admin/staff`, `PATCH /api/admin/staff/[id]`, and `PUT /api/admin/staff/[id]/services`. Each re-resolves the active database-backed user and returns `401` unauthenticated or `403` non-admin before parsing/mutation. Validation failures are `400`, unique slug/email conflicts `409`, missing managed resources `404`, and unexpected failures a generic `500`. Responses never contain password hashes or plaintext passwords.
 
+TASK-010 adds authenticated `POST /api/admin/availability`, `DELETE /api/admin/availability/[id]`, `POST /api/admin/blocked-times`, and `DELETE /api/admin/blocked-times/[id]`. ADMIN may target any STAFF account; STAFF may target only themselves. Cross-scope or missing resources return `404`, validation returns `400`, overlaps/disabled targets return `409`, missing studio configuration returns `503`, and unexpected errors remain generic. Responses expose only schedule identifiers and never blocked reasons beyond the authorized internal page.
+
 ## Interface choice
 
 - Use **Server Actions** for first-party form mutations tightly coupled to App Router views.

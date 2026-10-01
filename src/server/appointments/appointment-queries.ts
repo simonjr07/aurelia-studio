@@ -38,7 +38,7 @@ const listSelect = {
   timezoneSnapshot: true,
   serviceNameSnapshot: true,
   serviceDurationSnapshot: true,
-  staff: { select: { name: true } },
+  staff: { select: { id: true, name: true } },
 } as const;
 
 export async function getAppointmentOverview(
@@ -110,6 +110,7 @@ export async function getAppointment(
       priceCentsSnapshot: true,
       currencySnapshot: true,
       createdAt: true,
+      service: { select: { slug: true } },
       statusEvents: {
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         select: {
@@ -120,6 +121,10 @@ export async function getAppointment(
           createdAt: true,
           changedByUser: { select: { name: true } },
         },
+      },
+      rescheduleEvents: {
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: { id: true, fromStartAt: true, fromEndAt: true, toStartAt: true, toEndAt: true, fromStaffId: true, toStaffId: true, note: true, createdAt: true, changedByUser: { select: { name: true } } },
       },
     },
   });

@@ -9,6 +9,7 @@ import { bookingStatusLabels } from "@/server/appointments/status-transitions";
 import { requireStaff } from "@/server/auth/access";
 
 import { StatusActions } from "./status-actions";
+import { RescheduleActions } from "./reschedule-actions";
 
 export default async function AppointmentDetailPage({
   params,
@@ -46,10 +47,14 @@ export default async function AppointmentDetailPage({
           </dl>
         </section>
 
+        {appointment.status === "PENDING" || appointment.status === "CONFIRMED" ? <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9"><h2 className="font-display text-3xl">Reschedule</h2><p className="mt-2 text-sm text-ink/55">Internal rescheduling is not subject to the customer cutoff. Availability is revalidated transactionally.</p><div className="mt-6"><RescheduleActions bookingId={appointment.id} currentStaffId={appointment.staff.id} role={actor.role} serviceSlug={appointment.service.slug} startAt={appointment.startAt.toISOString()} status={appointment.status} /></div></section> : null}
+
         <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9">
           <h2 className="font-display text-3xl">Update status</h2>
           <div className="mt-6"><StatusActions bookingId={appointment.id} status={appointment.status} /></div>
         </section>
+
+        <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9"><h2 className="font-display text-3xl">Reschedule history</h2>{appointment.rescheduleEvents.length === 0 ? <p className="mt-4 text-ink/55">No reschedules recorded.</p> : <ol className="mt-6 space-y-5 border-l border-ink/15 pl-6">{appointment.rescheduleEvents.map((event) => <li key={event.id}><p className="font-semibold">{formatAppointmentDateTime(event.fromStartAt, appointment.timezoneSnapshot)} → {formatAppointmentDateTime(event.toStartAt, appointment.timezoneSnapshot)}</p><p className="mt-1 text-sm text-ink/55">Changed {formatAppointmentDateTime(event.createdAt, appointment.timezoneSnapshot)} · {event.changedByUser?.name ?? "Customer / system"}</p>{event.note ? <p className="mt-2 text-sm">{event.note}</p> : null}</li>)}</ol>}</section>
 
         <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9">
           <h2 className="font-display text-3xl">Status history</h2>

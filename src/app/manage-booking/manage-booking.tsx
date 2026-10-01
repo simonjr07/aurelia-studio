@@ -18,7 +18,17 @@ type PublicBookingDetail = {
   priceCents: number;
   currency: string;
   customerName: string;
+  serviceSlug: string;
+  staffId: string;
+  cancellationCutoffMinutes: number;
+  rescheduleCutoffMinutes: number;
+  canCancel: boolean;
+  canReschedule: boolean;
+  cancellationCutoffAt: string;
+  rescheduleCutoffAt: string;
 };
+
+type AvailabilitySlot = { startAt: string; localTimeLabel: string; eligibleStaff: Array<{ id: string; name: string }> };
 
 type LookupFieldErrors = Partial<Record<"reference" | "email", string[]>>;
 
@@ -47,6 +57,12 @@ export function ManageBooking() {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [booking, setBooking] = useState<PublicBookingDetail | null>(null);
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [mode, setMode] = useState<"cancel" | "reschedule" | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleStaff, setRescheduleStaff] = useState("");
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [selectedStartAt, setSelectedStartAt] = useState("");
 
   async function submitLookup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,6 +93,7 @@ export function ManageBooking() {
       }
 
       setBooking(body);
+      setVerifiedEmail(email.trim().toLowerCase());
       setReference("");
       setEmail("");
     } catch {
@@ -90,6 +107,39 @@ export function ManageBooking() {
     setBooking(null);
     setError("");
     setFieldErrors({});
+    setMode(null);
+  }
+
+  async function refreshVerifiedBooking(current: PublicBookingDetail) {
+    const response = await fetch("/api/bookings/lookup", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ reference: current.reference, email: verifiedEmail }) });
+    if (response.ok) setBooking(await response.json());
+  }
+
+  async function cancelBooking() {
+    if (!booking || pending) return; setPending(true); setError("");
+    try {
+      const response = await fetch("/api/bookings/cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reference: booking.reference, email: verifiedEmail, expectedStatus: booking.status, expectedStartAt: booking.startAt }) });
+      const body = await response.json(); if (!response.ok) return setError(body.error || "Cancellation is temporarily unavailable.");
+      await refreshVerifiedBooking(booking); setMode(null);
+    } catch { setError("Cancellation is temporarily unavailable."); } finally { setPending(false); }
+  }
+
+  async function loadSlots() {
+    if (!booking || !rescheduleDate || pending) return; setPending(true); setError(""); setSelectedStartAt("");
+    try {
+      const staff = rescheduleStaff ? `&staff=${encodeURIComponent(rescheduleStaff)}` : "";
+      const response = await fetch(`/api/availability?service=${encodeURIComponent(booking.serviceSlug)}&date=${rescheduleDate}${staff}`, { cache: "no-store" });
+      const body = await response.json(); if (!response.ok) return setError(body.error || "Availability is temporarily unavailable."); setSlots(body.slots);
+    } catch { setError("Availability is temporarily unavailable."); } finally { setPending(false); }
+  }
+
+  async function confirmReschedule() {
+    if (!booking || !selectedStartAt || pending) return; setPending(true); setError("");
+    try {
+      const response = await fetch("/api/bookings/reschedule", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reference: booking.reference, email: verifiedEmail, expectedStatus: booking.status, expectedStartAt: booking.startAt, startAt: selectedStartAt, ...(rescheduleStaff ? { staffId: rescheduleStaff } : {}) }) });
+      const body = await response.json(); if (!response.ok) return setError(body.error || "Rescheduling is temporarily unavailable.");
+      await refreshVerifiedBooking(booking); setMode(null); setSlots([]); setSelectedStartAt("");
+    } catch { setError("Rescheduling is temporarily unavailable."); } finally { setPending(false); }
   }
 
   if (booking) {
@@ -151,11 +201,17 @@ export function ManageBooking() {
               </div>
             </dl>
 
-            <p className="mt-7 text-sm leading-6 text-ink/55">
-              Rescheduling and cancellation will be available where policy
-              permits. This page is currently view-only.
-            </p>
+            <div className="mt-7 rounded-2xl bg-cream p-5 text-sm leading-6 text-ink/60">
+              <p>Online cancellation is available until {studioTime(booking.cancellationCutoffAt, booking.timezone)} on {studioDate(booking.cancellationCutoffAt, booking.timezone)} ({booking.cancellationCutoffMinutes} minutes before the appointment).</p>
+              <p className="mt-2">Online rescheduling is available until {studioTime(booking.rescheduleCutoffAt, booking.timezone)} on {studioDate(booking.rescheduleCutoffAt, booking.timezone)} ({booking.rescheduleCutoffMinutes} minutes before the appointment).</p>
+            </div>
+            {error ? <p className="mt-5 rounded-xl bg-clay/10 p-4 text-sm font-semibold text-clay" role="alert">{error}</p> : null}
+            {mode === "cancel" ? <section className="mt-6 rounded-2xl border border-clay/30 p-5"><h3 className="font-display text-2xl">Cancel this booking?</h3><p className="mt-3 text-sm leading-6">This will cancel {booking.serviceName} on {studioDate(booking.startAt, booking.timezone)} at {studioTime(booking.startAt, booking.timezone)}. Reference {booking.reference} will remain available for your records.</p><div className="mt-5 flex gap-3"><button className="min-h-11 rounded-full bg-clay px-5 font-semibold text-white disabled:opacity-50" disabled={pending} onClick={cancelBooking} type="button">{pending ? "Cancelling…" : "Confirm cancellation"}</button><button className="min-h-11 rounded-full border border-ink/20 px-5 font-semibold" onClick={() => setMode(null)} type="button">Keep booking</button></div></section> : null}
+            {mode === "reschedule" ? <section className="mt-6 rounded-2xl border border-ink/15 p-5"><h3 className="font-display text-2xl">Choose a new time</h3><div className="mt-4 grid gap-3 sm:grid-cols-3"><label className="text-sm font-semibold">New date<input className="mt-2 min-h-11 w-full rounded-xl border border-ink/20 px-3" onChange={(event) => setRescheduleDate(event.target.value)} type="date" value={rescheduleDate} /></label><label className="text-sm font-semibold">Professional<select className="mt-2 min-h-11 w-full rounded-xl border border-ink/20 px-3" onChange={(event) => setRescheduleStaff(event.target.value)} value={rescheduleStaff}><option value="">Any available</option><option value={booking.staffId}>Keep {booking.staffName}</option></select></label><button className="mt-6 min-h-11 rounded-full bg-ink px-5 font-semibold text-cream disabled:opacity-50" disabled={!rescheduleDate || pending} onClick={loadSlots} type="button">{pending ? "Checking…" : "Check times"}</button></div>{slots.length > 0 ? <div className="mt-5 flex flex-wrap gap-2">{slots.map((slot) => <button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${selectedStartAt === slot.startAt ? "bg-sage text-cream" : "border-ink/20"}`} key={slot.startAt} onClick={() => setSelectedStartAt(slot.startAt)} type="button">{slot.localTimeLabel}</button>)}</div> : null}{selectedStartAt ? <div className="mt-6 rounded-xl bg-cream p-4"><p className="font-semibold">Review: {studioDate(booking.startAt, booking.timezone)} {studioTime(booking.startAt, booking.timezone)} → {studioDate(selectedStartAt, booking.timezone)} {studioTime(selectedStartAt, booking.timezone)}</p><button className="mt-4 min-h-11 rounded-full bg-ink px-5 font-semibold text-cream disabled:opacity-50" disabled={pending} onClick={confirmReschedule} type="button">{pending ? "Rescheduling…" : "Confirm reschedule"}</button></div> : null}</section> : null}
             <div className="mt-8 flex flex-wrap gap-3">
+              {booking.canReschedule && !mode ? <button className="min-h-12 rounded-full bg-sage px-7 font-semibold text-cream" onClick={() => setMode("reschedule")} type="button">Reschedule</button> : null}
+              {booking.canCancel && !mode ? <button className="min-h-12 rounded-full border border-clay px-7 font-semibold text-clay" onClick={() => setMode("cancel")} type="button">Cancel booking</button> : null}
+              {!booking.canCancel && !booking.canReschedule && (booking.status === "PENDING" || booking.status === "CONFIRMED") ? <p className="w-full text-sm text-ink/55">Online changes are no longer available because the policy cutoff has passed.</p> : null}
               <button
                 className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream"
                 onClick={resetLookup}

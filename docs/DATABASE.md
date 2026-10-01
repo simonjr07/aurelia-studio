@@ -22,8 +22,9 @@ The schema defines:
 - `BlockedTime` for one-off staff unavailability.
 - `Booking` with `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, and `NO_SHOW` states.
 - Append-only `BookingStatusEvent` rows with an optional authenticated actor.
+- Append-only `BookingRescheduleEvent` rows preserving old/new staff and interval facts plus an optional authenticated actor and note.
 - Singleton `BusinessSettings` for timezone, currency, booking rules, and public contacts.
-- `RateLimitBucket` keyed by action, an HMAC identity, and window start. `LOGIN`, `BOOKING_CREATE`, and `PUBLIC_BOOKING_LOOKUP` are active.
+- `RateLimitBucket` keyed by action, an HMAC identity, and window start. Login, booking creation, lookup, public cancellation, and public rescheduling use distinct actions.
 
 Internal identifiers are UUIDs. Customer accounts are intentionally absent. Services and staff referenced by bookings use restrictive deletion, while every booking snapshots the service name, duration, price, currency, and timezone so catalog changes cannot rewrite history.
 
@@ -85,6 +86,10 @@ TASK-009 adds no schema or migration. It uses `Service`, STAFF `User`, and `Staf
 
 TASK-010 adds no schema or migration. `AvailabilityRule` continues storing weekday-local half-open minute ranges; `BlockedTime` stores timezone-resolved `TIMESTAMPTZ` instants. Application-level serializable transactions reject overlaps and active-booking conflicts. Removing rules or blocks deletes only those schedule rows and never rewrites existing bookings.
 
+TASK-011 adds the `PUBLIC_BOOKING_CANCEL` and `PUBLIC_BOOKING_RESCHEDULE` limiter actions plus `BookingRescheduleEvent`. Rescheduling mutates only the existing booking's `staffId`, `startAt`, `endAt`, and `updatedAt`; its id, public reference, status, and service snapshots remain unchanged. Each successful move inserts an immutable event containing the former and new staff/interval, optional internal actor/note, and creation time. Public cancellation uses the existing append-only status history with a null actor.
+
+The change transaction re-reads the booking, settings, service eligibility, schedule, blocks, and active bookings. Its availability read excludes the booking being moved, while the GiST exclusion constraint still decides overlapping active intervals under concurrency. Separate HMAC-only rate-limit buckets allow cancellation and rescheduling policy to evolve without altering login, creation, or lookup counters.
+
 ## Remaining design decisions
 
-Opening-hours storage, pending-hold expiry, reschedule lineage, customer verification, retention, and staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).
+Opening-hours storage, pending-hold expiry, notification delivery, retention, and any broader staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).

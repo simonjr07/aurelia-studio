@@ -122,15 +122,25 @@ Interpret date and time input using `BusinessSettings.timezone`, never browser o
 
 Reject blocked time overlapping `PENDING` or `CONFIRMED` appointments. `COMPLETED`, `CANCELLED`, and `NO_SHOW` history does not occupy future capacity. Never auto-cancel or rewrite a booking when schedule rows change.
 
+### ADR-031 — Preserve one booking identity across reschedules
+
+Reschedule the existing booking rather than cancel-and-replace it. Preserve its id, opaque reference, status, service id, and service snapshots; public V1 does not permit a service change. Update only assignment and interval facts. Append a structured `BookingRescheduleEvent` with old/new values and the optional authenticated actor/note so lineage is immutable without requiring customers to adopt a new reference.
+
+### ADR-032 — Customer cutoffs; authenticated operational override
+
+Public cancellation and rescheduling require reference/email verification every time, operate only on `PENDING` or `CONFIRMED`, and apply their setting-specific cutoffs. Equality is allowed. Authenticated appointment operations do not apply customer cutoffs: staff remain own/self-only, while administrators may select another currently eligible professional. All paths still require stale-state checks and audit history.
+
+### ADR-033 — Revalidate reschedules and retain database authority
+
+Run the TASK-005 availability adapter inside the change transaction with the current booking excluded and its snapshot duration retained. Availability is still advisory; the PostgreSQL GiST exclusion constraint is the final concurrent-overlap authority. Public cancellation and rescheduling have distinct HMAC limiter actions so they cannot consume or change login and creation budgets.
+
 ## Human approval required
 
 | Decision | Options / impact |
 | --- | --- |
 | Studio timezone and default currency | Bootstrap is set by TASK-002 to `America/New_York` and USD; business confirmation is still required before production. |
 | Pending hold expiry | `PENDING` currently occupies capacity. Define its expiry/cleanup policy before public booking creation. |
-| Reschedule history model | Mutate one booking with structured events, or cancel/replace with linked bookings; replacement gives clearer immutable history. |
 | Staff appointment scope | Assigned appointments only, all operational appointments, or configurable permission. |
 | Staff blocked-time scope | Own time only versus manager-approved broader access. |
-| Cancellation/reschedule cutoffs | Define customer and staff policies, reasons, and override authority. |
 | Data retention | Retention/deletion periods for contact data, audit events, logs, and expired rate-limit records. |
 | Opening-hours model | Structured child rows are normalized; JSON settings are simpler but harder to constrain/query. |

@@ -39,6 +39,8 @@ enum RateLimitAction {
   LOGIN
   BOOKING_CREATE
   PUBLIC_BOOKING_LOOKUP
+  PUBLIC_BOOKING_CANCEL
+  PUBLIC_BOOKING_RESCHEDULE
 }
 
 model User {
@@ -55,6 +57,7 @@ model User {
   blockedTimes        BlockedTime[]
   bookings            Booking[]
   bookingStatusEvents BookingStatusEvent[] @relation("BookingStatusChangedBy")
+  bookingRescheduleEvents BookingRescheduleEvent[] @relation("BookingRescheduleChangedBy")
 
   @@index([status, role])
 }
@@ -137,10 +140,30 @@ model Booking {
   service                 Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   staff                   User                 @relation(fields: [staffId], references: [id], onDelete: Restrict)
   statusEvents            BookingStatusEvent[]
+  rescheduleEvents        BookingRescheduleEvent[]
 
   @@index([staffId, startAt, endAt])
   @@index([serviceId, startAt])
   @@index([status, startAt])
+}
+
+model BookingRescheduleEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  bookingId       String   @db.Uuid
+  fromStaffId     String   @db.Uuid
+  toStaffId       String   @db.Uuid
+  fromStartAt     DateTime @db.Timestamptz(3)
+  fromEndAt       DateTime @db.Timestamptz(3)
+  toStartAt       DateTime @db.Timestamptz(3)
+  toEndAt         DateTime @db.Timestamptz(3)
+  changedByUserId String?  @db.Uuid
+  note            String?  @db.VarChar(1000)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  changedByUser   User?    @relation("BookingRescheduleChangedBy", fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+  @@index([changedByUserId])
 }
 
 model BookingStatusEvent {

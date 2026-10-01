@@ -48,6 +48,10 @@ TASK-009 adds exact money/slug unit tests, direct management-route authenticatio
 
 The complete TASK-009 suite contains 114 passing tests across 23 files with PostgreSQL configured; none of the database suites are skipped.
 
+TASK-010 adds wall-clock/DST unit coverage and live PostgreSQL schedule-management coverage. It verifies ADMIN and self scope, cross-staff hiding, invalid/overlapping/duplicate/touching windows, block timezone conversion and overlaps, disabled-staff policy, all five booking statuses, booking immutability, and add/remove rule/block effects through the real TASK-005 availability service.
+
+The complete TASK-010 suite contains 127 passing tests across 25 files with every PostgreSQL integration suite active.
+
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.

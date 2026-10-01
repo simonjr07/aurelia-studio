@@ -110,6 +110,18 @@ Treat the submitted checkbox set as the complete assignment state. Verify a STAF
 
 Accept familiar major-unit values such as `85.00`, validate at most two fractional digits, and assemble integer cents from string parts using `BigInt`. Never multiply a binary floating-point number to derive stored money.
 
+### ADR-028 — Create/delete local recurring windows
+
+Keep recurring schedules as active `AvailabilityRule` rows measured in minutes after local midnight. Create/delete is clearer and less destructive than whole-week replacement. Touching half-open windows are valid; overlapping or duplicate active windows are rejected inside serializable transactions.
+
+### ADR-029 — Resolve exceptional blocks in the studio timezone
+
+Interpret date and time input using `BusinessSettings.timezone`, never browser or host timezone. Reject nonexistent spring-forward values and select the earlier instant for ambiguous fall-back values, matching the availability engine. Blocks are same-local-day periods with `24:00` accepted only as the end boundary.
+
+### ADR-030 — Active appointments prevent new blocks
+
+Reject blocked time overlapping `PENDING` or `CONFIRMED` appointments. `COMPLETED`, `CANCELLED`, and `NO_SHOW` history does not occupy future capacity. Never auto-cancel or rewrite a booking when schedule rows change.
+
 ## Human approval required
 
 | Decision | Options / impact |

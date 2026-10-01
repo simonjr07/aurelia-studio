@@ -95,6 +95,12 @@ The `/admin/services` and `/admin/staff` leaf pages call `requireAdmin()` before
 
 Assignment replacement verifies the target is a STAFF account and every service exists, then deletes/recreates the set in one transaction. Services and staff are never hard-deleted. Booking snapshots are never updated; the existing live staff-name relation means older appointment displays reflect a later staff-name edit.
 
+## Schedule management
+
+`/admin/availability` gives administrators a STAFF-only target list and redirects staff members to their own schedule. Every detail query and mutation rechecks `ADMIN || actor.id === targetStaffId`; cross-staff access uses not-found semantics. Disabled staff remain inspectable and existing entries removable, but new windows and blocks are rejected.
+
+Recurring windows retain local studio wall-clock minutes and use create/delete operations. Block input is resolved through the configured IANA timezone to concrete instants, rejecting nonexistent DST times and choosing the earlier instant during fall-back ambiguity. Serializable transactions reject overlapping half-open windows/blocks and blocks that overlap `PENDING` or `CONFIRMED` bookings. Schedule changes never alter bookings and flow directly into the existing availability engine.
+
 ## Request and mutation rules
 
 1. Treat request data, search parameters, sessions, and database reads crossing a trust boundary as untrusted.

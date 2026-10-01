@@ -83,6 +83,8 @@ TASK-008 adds no schema or migration. Appointment list/detail queries use existi
 
 TASK-009 adds no schema or migration. It uses `Service`, STAFF `User`, and `StaffService` as designed. Database uniqueness on `Service.slug`, `User.email`, and `(staffId, serviceId)` remains authoritative. Assignment-set replacement is transactional. Service/staff deactivation replaces hard deletion, preserving restrictive booking relations and immutable service name/duration/price/currency snapshots. Staff names remain live relation data and therefore change on historical internal displays when renamed.
 
+TASK-010 adds no schema or migration. `AvailabilityRule` continues storing weekday-local half-open minute ranges; `BlockedTime` stores timezone-resolved `TIMESTAMPTZ` instants. Application-level serializable transactions reject overlaps and active-booking conflicts. Removing rules or blocks deletes only those schedule rows and never rewrites existing bookings.
+
 ## Remaining design decisions
 
 Opening-hours storage, pending-hold expiry, reschedule lineage, customer verification, retention, and staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).

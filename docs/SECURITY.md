@@ -11,6 +11,7 @@
 - Reserve service/staff/settings administration for `ADMIN`; document and test each `STAFF` permission.
 - Service/staff management pages call `requireAdmin()`, and every management API plus server-only mutation independently asserts ADMIN. Staff links being hidden is only presentation.
 - Ordinary management can create and edit STAFF only; role is forced server-side and ADMIN identities are outside the editable query boundary. Disablement takes effect through the existing database-backed current-user recheck.
+- Schedule mutations re-resolve an active actor and authorize the target resource server-side: ADMIN may manage STAFF accounts, while STAFF may use only their own id. Cross-staff reads/deletes are hidden as not found, and disabled targets cannot receive new entries.
 
 ## Input and mutation safety
 
@@ -52,6 +53,8 @@
 `AUTH_SECRET` signs authentication state. `RATE_LIMIT_SECRET` independently HMACs login-limiter identities and must be at least 32 characters. Administrator provisioning reads credentials from process environment variables and refuses production execution unless both the documented mode flag and exact confirmation phrase are supplied.
 
 Staff temporary passwords are accepted only by the create endpoint, bounded for bcrypt, hashed at cost 12 before persistence, omitted from all return selections, and never logged or displayed again. Unique email/slug database failures are translated to safe messages without raw Prisma details.
+
+Blocked-time reasons remain internal to authorized schedule pages. Schedule DTOs exclude password data, customer data, booking details, and rate-limit state. Booking-overlap errors reveal only that an appointment conflicts, not its customer or identity.
 
 ## Operational hardening
 

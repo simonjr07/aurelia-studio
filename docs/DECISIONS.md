@@ -137,6 +137,13 @@ Run the TASK-005 availability adapter inside the change transaction with the cur
 ### ADR-034 — Editorial public system without a media dependency
 
 Use a restrained ivory/charcoal foundation with sage, clay, stone, and muted-gold accents. Pair native editorial-serif and clean interface-sans stacks so rendering has no font-download or build-network dependency, keep page structure server-first, and express the brand through typography, spacing, linework, and lightweight CSS composition rather than stock imagery or an animation/icon library. Shared `public-*` design primitives define containers, buttons, fields, surfaces, alerts, focus behavior, and reduced-motion handling. Public refresh work may improve markup and copy but must not change booking rules, API contracts, authentication, or persistence.
+### ADR-035 — Appointment-date, studio-local operational analytics
+
+Filter analytics by booking `startAt`, not `createdAt`, using inclusive studio-local input dates converted to a half-open instant range. Treat status counts as the current state of bookings rather than an event-history reconstruction. Daily grouping is performed by parameterized PostgreSQL timezone conversion so UTC-midnight boundaries cannot move appointments to the wrong studio day.
+
+### ADR-036 — Aggregate-only workload analytics without revenue claims
+
+Expose ADMIN-only booking/status totals, daily volume, service ranking, and staff workload. Workload means non-cancelled appointment count and snapshotted scheduled minutes; it is not utilization because no capacity denominator is calculated. Group services by stable id with historical snapshot names, retain inactive/disabled historical rows, return no customer PII or rate-limit facts, and omit booking value/revenue because no payment source establishes collected revenue. Render dynamically through the Server Component without a public endpoint or long-lived cache.
 
 ## Human approval required
 

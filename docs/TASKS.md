@@ -88,8 +88,9 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 ## TASK-012 — Dashboard analytics
 
 - **Objective:** show simple, actionable booking indicators.
-- **Deliverables:** date-filtered counts/trends for bookings, status, utilization, and popular services.
+- **Deliverables:** date-filtered booking/status counts, studio-local trend, popular services, and staff workload.
 - **Acceptance:** admin-only aggregates match database fixtures, handle timezone boundaries, and expose no unnecessary PII.
+- **Status:** implementation complete; ADMIN-only dynamic analytics, validated 7/30/90-day and bounded custom ranges, current-status summaries, studio-local daily trend, historical service ranking, non-cancelled staff workload, accessible responsive presentation, and live PostgreSQL integration coverage are included. No schema or public API was added.
 
 ## TASK-013 — Frontend polish
 

@@ -78,6 +78,13 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Acceptance:** rescheduling enforces the overlap invariant and stale-state handling; cancellation/reschedule policies are tested.
 - **Status:** implementation complete; verified public cancellation/rescheduling, setting-derived equality-inclusive cutoffs, same-booking immutable reschedule history, role-scoped internal rescheduling, separate HMAC throttles, transactional availability revalidation, PostgreSQL overlap authority, and live concurrency tests are included.
 
+## TASK-011.5 — Public UI/UX refresh
+
+- **Objective:** give the complete public customer journey a cohesive boutique beauty/wellness identity.
+- **Deliverables:** responsive public navigation/footer, editorial homepage and catalogue, refined service detail, accessible five-step booking, polished confirmation, and consistent lookup/cancellation/rescheduling presentation.
+- **Acceptance:** existing business behavior and security contracts remain unchanged; public flows retain labels, keyboard focus, non-color selected states, responsive tap targets, safe errors, loading/empty states, and reduced-motion support.
+- **Status:** implementation complete; shared typography/color/control tokens, code-native visual composition, responsive customer journeys, and relevant documentation are included without backend, schema, or API changes.
+
 ## TASK-012 — Dashboard analytics
 
 - **Objective:** show simple, actionable booking indicators.

@@ -11,16 +11,17 @@ export function ServiceCard({
   index: number;
 }) {
   return (
-    <article className="group flex min-h-[25rem] flex-col rounded-[2rem] border border-ink/10 bg-white/55 p-7 shadow-[0_24px_70px_rgba(32,35,31,0.06)] transition duration-300 hover:-translate-y-1 hover:bg-white/75 sm:p-8">
+    <article className="group relative flex min-h-[23rem] flex-col overflow-hidden border border-ink/10 bg-paper/65 p-7 transition duration-300 hover:-translate-y-1 hover:border-clay/30 hover:shadow-[0_24px_70px_rgba(39,36,31,0.08)] sm:p-8">
+      <div className="absolute right-0 top-0 h-28 w-28 translate-x-10 -translate-y-10 rounded-full border border-clay/15 transition duration-500 group-hover:scale-125" aria-hidden="true" />
       <div className="flex items-start justify-between gap-4">
         <p className="text-xs font-semibold tracking-[0.2em] text-clay">
           {String(index + 1).padStart(2, "0")}
         </p>
-        <p className="rounded-full border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/55">
+        <p className="rounded-full border border-ink/10 bg-cream/60 px-3 py-1.5 text-xs font-semibold text-ink/55">
           {formatDuration(service.durationMinutes)}
         </p>
       </div>
-      <h2 className="mt-14 font-display text-4xl leading-tight tracking-[-0.025em]">
+      <h2 className="mt-12 font-display text-4xl leading-[1.02] tracking-[-0.025em] sm:text-[2.75rem]">
         {service.name}
       </h2>
       <p className="mt-5 line-clamp-3 leading-7 text-ink/60">
@@ -32,7 +33,7 @@ export function ServiceCard({
         </p>
         <Link
           aria-label={`View details for ${service.name}`}
-          className="inline-flex min-h-11 items-center rounded-full bg-ink px-5 text-sm font-semibold text-cream transition group-hover:bg-clay"
+          className="public-button-primary"
           href={`/services/${service.slug}`}
         >
           View details

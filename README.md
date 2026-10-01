@@ -10,7 +10,9 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 011 rescheduling and cancellation workflow**: public discovery, booking and verified management; authenticated appointment operations; administrator catalogue/team controls; role-scoped schedule management; and audited customer/staff booking changes. Analytics remains a later task.
+The project currently includes the **Task 011.5 public experience refresh**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow. Analytics remains a later task.
+
+The public interface uses a restrained ivory, charcoal, sage, and clay palette; an editorial display face paired with a readable interface sans; shared controls and surface styles; responsive navigation; explicit selected/loading/empty/error states; and reduced-motion-aware transitions. This presentation layer does not alter booking policies, API contracts, authentication, or persistence behavior.
 
 ## Architecture and stack
 

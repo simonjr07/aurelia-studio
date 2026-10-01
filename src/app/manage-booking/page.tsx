@@ -13,19 +13,18 @@ export const metadata: Metadata = {
 
 export default function ManageBookingPage() {
   return (
-    <main className="min-h-screen bg-cream text-ink">
+    <main className="public-shell">
       <PublicHeader />
-      <section className="border-b border-ink/10 px-6 py-14 sm:px-10 sm:py-20">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-clay">
+      <section className="border-b border-ink/10 bg-paper/30 py-14 sm:py-20">
+        <div className="public-container max-w-6xl">
+          <p className="public-eyebrow">
             Your appointment
           </p>
-          <h1 className="mt-4 max-w-4xl font-display text-5xl leading-none tracking-[-0.04em] sm:text-7xl">
+          <h1 className="public-display mt-4 max-w-4xl text-[3.25rem] leading-[0.95] sm:text-7xl">
             Manage your booking
           </h1>
           <p className="mt-5 max-w-2xl leading-7 text-ink/65">
-            Enter the reference from your confirmation and the email used when
-            booking. No customer account is required.
+            Review the details of your visit, or make an eligible change, using the private reference from your confirmation and your booking email.
           </p>
         </div>
       </section>

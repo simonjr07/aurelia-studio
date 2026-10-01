@@ -39,19 +39,18 @@ export default async function BookingPage({ params }: BookingPageProps) {
   const today = DateTime.now().setZone(settings.timezone).startOf("day");
 
   return (
-    <main className="min-h-screen bg-cream text-ink">
+    <main className="public-shell">
       <PublicHeader />
-      <section className="border-b border-ink/10 px-6 py-12 sm:px-10 sm:py-16">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-clay">
+      <section className="border-b border-ink/10 bg-paper/30 py-12 sm:py-16">
+        <div className="public-container max-w-6xl">
+          <p className="public-eyebrow">
             Reserve your visit
           </p>
-          <h1 className="mt-4 max-w-4xl font-display text-5xl leading-none tracking-[-0.04em] sm:text-7xl">
+          <h1 className="public-display mt-4 max-w-4xl text-5xl leading-none sm:text-7xl">
             Book {service.name}
           </h1>
           <p className="mt-5 max-w-2xl leading-7 text-ink/65">
-            Choose a professional and an available studio time. Your booking
-            will be held as pending once confirmed.
+            Five simple steps. Choose your professional and time, share your details, then review everything before confirming.
           </p>
         </div>
       </section>

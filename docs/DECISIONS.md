@@ -134,6 +134,10 @@ Public cancellation and rescheduling require reference/email verification every 
 
 Run the TASK-005 availability adapter inside the change transaction with the current booking excluded and its snapshot duration retained. Availability is still advisory; the PostgreSQL GiST exclusion constraint is the final concurrent-overlap authority. Public cancellation and rescheduling have distinct HMAC limiter actions so they cannot consume or change login and creation budgets.
 
+### ADR-034 — Editorial public system without a media dependency
+
+Use a restrained ivory/charcoal foundation with sage, clay, stone, and muted-gold accents. Pair native editorial-serif and clean interface-sans stacks so rendering has no font-download or build-network dependency, keep page structure server-first, and express the brand through typography, spacing, linework, and lightweight CSS composition rather than stock imagery or an animation/icon library. Shared `public-*` design primitives define containers, buttons, fields, surfaces, alerts, focus behavior, and reduced-motion handling. Public refresh work may improve markup and copy but must not change booking rules, API contracts, authentication, or persistence.
+
 ## Human approval required
 
 | Decision | Options / impact |

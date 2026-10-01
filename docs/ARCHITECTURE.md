@@ -27,6 +27,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible-staff projection, and development catalogue bootstrap policy.
 - **Availability (`src/server/availability`):** pure wall-clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity-blocking bookings to the domain core.
 - **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database-conflict translation.
+- **Public booking lookup (`src/server/bookings`):** strict reference/email verification, shared persistent abuse controls, snapshot-backed safe projection, and generic anti-enumeration outcomes.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -74,6 +75,12 @@ The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLea
 `/book/[slug]` is a focused client-state flow for staff, date, time, details, review, and confirmation. The browser fetches candidate slots but submits only identifiers and contact input. `createPublicBooking()` validates again and opens one interactive Prisma transaction. Inside it, the service and settings are re-read, the existing availability adapter runs against the transaction client, a specific staff member is verified or an available staff member is selected, authoritative end time/snapshots are derived, and the `PENDING` booking plus initial status event are inserted atomically.
 
 “Any available” sorts the slot’s currently eligible staff by stable UUID and chooses the first. Specific-staff requests never switch silently. The outer reference-collision loop retries the entire transaction because PostgreSQL aborts a transaction after a unique violation. A PostgreSQL active-overlap violation is translated to a safe domain conflict; the exclusion constraint remains authoritative when concurrent transactions both pass advisory revalidation.
+
+## Public booking management
+
+`/manage-booking` keeps credentials in transient client state and sends them only in a POST body. The lookup service normalizes email and performs one constant-shaped query matching both reference and email. A match is mapped to an allow-listed DTO using booking snapshots; nonmatches become one generic domain error. The page clears submitted credentials after success, retains only the safe DTO, stores nothing in browser persistence, is marked `noindex`, and exposes no mutation controls.
+
+Lookup throttling reuses the shared fixed-window/HMAC primitive. PostgreSQL stores separate `PUBLIC_BOOKING_LOOKUP` counters for reference, normalized email, and available network identity at ten attempts per 15 minutes. Any exhausted dimension blocks the request.
 
 ## Request and mutation rules
 

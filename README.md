@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 006 public booking flow**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware availability, and concurrency-safe transactional booking creation. Public booking management and operational administration are not implemented yet.
+The project currently includes the **Task 007 public booking experience**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware availability, concurrency-safe booking creation, and secure reference-plus-email booking lookup. Cancellation, rescheduling, and operational administration are not implemented yet.
 
 ## Architecture and stack
 
@@ -64,4 +64,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database, staff authentication, public service browsing, advisory availability, and transactional public booking creation are implemented. Booking lookup, cancellation, and rescheduling remain later tasks.
+Database, staff authentication, public service browsing, advisory availability, transactional booking creation, and read-only public booking lookup are implemented. Cancellation and rescheduling remain later tasks.

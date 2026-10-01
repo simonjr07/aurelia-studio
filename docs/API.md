@@ -1,6 +1,6 @@
 # API and Server Interface Conventions
 
-TASK-006 adds the public booking mutation at `/api/bookings` alongside the advisory availability endpoint.
+TASK-007 adds private read-only booking verification at `/api/bookings/lookup` alongside availability and booking creation.
 
 ## Interface choice
 
@@ -15,7 +15,7 @@ TASK-006 adds the public booking mutation at `/api/bookings` alongside the advis
 | List/view active services | Server Component query or `GET /api/services` | Public fields only |
 | Query availability | `GET /api/availability` | One date; validated; dynamic; advisory |
 | Create booking | `POST /api/bookings` | Implemented: revalidates and enforces conflict atomically |
-| Retrieve public booking | `POST /api/bookings/lookup` | Reference plus verification factor; rate limited |
+| Retrieve public booking | `POST /api/bookings/lookup` | Implemented: reference plus normalized email; rate limited |
 | Reschedule/cancel | Server Action or scoped route | Policy, verification, audit, transaction |
 | Staff/admin operations | Server Actions by default | Authenticated and resource-authorized |
 
@@ -40,6 +40,12 @@ The handler is explicitly dynamic and sends `Cache-Control: no-store` because sl
 `POST /api/bookings` accepts only `serviceSlug`, optional `staffId`, `startAt`, `customerName`, `customerEmail`, `customerPhone`, and optional `customerNote`. The strict Zod boundary rejects unknown client fields, so price, duration, end time, snapshots, currency, and status cannot be mass-assigned. A successful `201` response contains only reference, pending status, public service/staff names, start/end instants, timezone, duration, price, and currency.
 
 Known outcomes are `400` with field errors, `404` for an unavailable service, `409` with `BOOKING_CONFLICT` for a stale/taken slot, `429` for throttling, and a generic `500`. Responses are `no-store`; raw Prisma/PostgreSQL details and customer PII are never returned. Booking creation consumes normalized-email and available-network HMAC buckets at five attempts per fixed 15-minute window.
+
+## Implemented public booking lookup
+
+`POST /api/bookings/lookup` accepts only `{ reference, email }`. The strict schema requires the exact `AUR-` reference pattern, bounds both fields, and normalizes email consistently with booking creation. Verification uses one query containing both values; unknown references and wrong emails receive the same `404` body. Malformed input returns `400`, the eleventh attempt within a fixed 15-minute identity window returns `429`, and internal failures return a generic `500`.
+
+The `200` DTO contains reference, enum/friendly status, booking snapshot service facts, current booked-professional name, start/end instants, snapshot timezone, and customer name. It excludes internal ids, contact details, notes, event data, staff account data, and rate-limit metadata. Every response sends `Cache-Control: private, no-store, max-age=0` and `Pragma: no-cache`.
 
 ## Implemented authentication interfaces
 

@@ -1,75 +1,72 @@
 import "server-only";
 
-import { getPrismaClient } from "../db/prisma";
 import {
   consumeFixedWindowRateLimit,
   type RateLimitIncrement,
 } from "../auth/rate-limit";
 import { normalizeEmail } from "../auth/validation";
+import { getPrismaClient } from "../db/prisma";
+import { getRequestNetworkIdentity } from "./rate-limit";
 
-export const BOOKING_RATE_LIMIT = {
-  attempts: 5,
+export const BOOKING_LOOKUP_RATE_LIMIT = {
+  attempts: 10,
   windowMs: 15 * 60 * 1000,
 } as const;
 
-export type BookingRateLimitRepository = {
-  incrementBookingBuckets(entries: RateLimitIncrement[]): Promise<number[]>;
+export type BookingLookupRateLimitRepository = {
+  incrementLookupBuckets(entries: RateLimitIncrement[]): Promise<number[]>;
 };
 
-export function getRequestNetworkIdentity(request: Request) {
-  const forwardedFor =
-    request.headers.get("x-vercel-forwarded-for") ??
-    request.headers.get("x-forwarded-for") ??
-    request.headers.get("x-real-ip");
-
-  return forwardedFor?.split(",", 1)[0]?.trim().slice(0, 128) || undefined;
-}
-
-export async function consumeBookingRateLimit({
+export async function consumeBookingLookupRateLimit({
+  referenceIdentity,
   emailIdentity,
   networkIdentity,
   secret,
   repository,
   now = new Date(),
 }: {
+  referenceIdentity: string;
   emailIdentity: string;
   networkIdentity?: string;
   secret: string;
-  repository: BookingRateLimitRepository;
+  repository: BookingLookupRateLimitRepository;
   now?: Date;
 }) {
-  const identities = [`booking-email:${normalizeEmail(emailIdentity)}`];
+  const identities = [
+    `lookup-reference:${referenceIdentity.trim()}`,
+    `lookup-email:${normalizeEmail(emailIdentity)}`,
+  ];
 
   if (networkIdentity) {
-    identities.push(`booking-network:${networkIdentity}`);
+    identities.push(`lookup-network:${networkIdentity}`);
   }
 
   return consumeFixedWindowRateLimit({
     identities,
     secret,
-    policy: BOOKING_RATE_LIMIT,
+    policy: BOOKING_LOOKUP_RATE_LIMIT,
     now,
     repository: {
-      incrementBuckets: (entries) => repository.incrementBookingBuckets(entries),
+      incrementBuckets: (entries) => repository.incrementLookupBuckets(entries),
     },
   });
 }
 
-const prismaBookingRateLimitRepository: BookingRateLimitRepository = {
-  async incrementBookingBuckets(entries) {
+const prismaBookingLookupRateLimitRepository: BookingLookupRateLimitRepository = {
+  async incrementLookupBuckets(entries) {
     const prisma = getPrismaClient();
     const buckets = await prisma.$transaction(
       entries.map((entry) =>
         prisma.rateLimitBucket.upsert({
           where: {
             action_keyHash_windowStart: {
-              action: "BOOKING_CREATE",
+              action: "PUBLIC_BOOKING_LOOKUP",
               keyHash: entry.keyHash,
               windowStart: entry.windowStart,
             },
           },
           create: {
-            action: "BOOKING_CREATE",
+            action: "PUBLIC_BOOKING_LOOKUP",
             keyHash: entry.keyHash,
             windowStart: entry.windowStart,
             expiresAt: entry.expiresAt,
@@ -87,26 +84,22 @@ const prismaBookingRateLimitRepository: BookingRateLimitRepository = {
   },
 };
 
-export async function enforceBookingRateLimit(
-  emailCandidate: unknown,
+export async function enforceBookingLookupRateLimit(
+  input: { reference: string; email: string },
   request: Request,
 ) {
   const secret = process.env.RATE_LIMIT_SECRET;
 
   if (!secret) {
-    throw new Error("RATE_LIMIT_SECRET is required for public booking.");
+    throw new Error("RATE_LIMIT_SECRET is required for public booking lookup.");
   }
 
-  const emailIdentity =
-    typeof emailCandidate === "string"
-      ? emailCandidate.slice(0, 320)
-      : "invalid-booking-email";
-
-  return consumeBookingRateLimit({
-    emailIdentity,
+  return consumeBookingLookupRateLimit({
+    referenceIdentity: input.reference,
+    emailIdentity: input.email,
     networkIdentity: getRequestNetworkIdentity(request),
     secret,
-    repository: prismaBookingRateLimitRepository,
+    repository: prismaBookingLookupRateLimitRepository,
   });
 }
 

@@ -90,6 +90,14 @@ Require both the opaque reference and normalized booking email in one POST-only 
 
 Return an allow-listed DTO using booking snapshots for service name, duration, price, currency, and timezone. Current staff name is the only related-user field. Mark the management route `noindex` and every lookup response private/no-store. Lookup is deliberately read-only until cancellation and rescheduling policy is implemented.
 
+### ADR-023 — Staff ownership is the appointment resource boundary
+
+Staff may query and mutate only bookings whose `staffId` equals their active database identity; admins may operate across staff. Return not-found for out-of-scope direct access so appointment existence is not disclosed.
+
+### ADR-024 — Explicit state machine with expected-state writes
+
+Centralize allowed transitions and require the client’s rendered status as an optimistic concurrency token. Inside one transaction, re-read authoritative status, validate it, conditionally update the same status, and create the audit event. Stale requests receive a conflict and cannot create impossible history.
+
 ## Human approval required
 
 | Decision | Options / impact |

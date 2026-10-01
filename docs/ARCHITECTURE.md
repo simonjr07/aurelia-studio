@@ -28,6 +28,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Availability (`src/server/availability`):** pure wall-clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity-blocking bookings to the domain core.
 - **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database-conflict translation.
 - **Public booking lookup (`src/server/bookings`):** strict reference/email verification, shared persistent abuse controls, snapshot-backed safe projection, and generic anti-enumeration outcomes.
+- **Appointment operations (`src/server/appointments`):** role-scoped queries, studio-local day boundaries, centralized state machine, conditional transactional status writes, and audit creation.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -81,6 +82,12 @@ The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLea
 `/manage-booking` keeps credentials in transient client state and sends them only in a POST body. The lookup service normalizes email and performs one constant-shaped query matching both reference and email. A match is mapped to an allow-listed DTO using booking snapshots; nonmatches become one generic domain error. The page clears submitted credentials after success, retains only the safe DTO, stores nothing in browser persistence, is marked `noindex`, and exposes no mutation controls.
 
 Lookup throttling reuses the shared fixed-window/HMAC primitive. PostgreSQL stores separate `PUBLIC_BOOKING_LOOKUP` counters for reference, normalized email, and available network identity at ten attempts per 15 minutes. Any exhausted dimension blocks the request.
+
+## Staff appointment operations
+
+Every page and mutation first resolves an active database-backed actor. `STAFF` queries include `staffId = actor.id`; `ADMIN` queries are unscoped. Out-of-scope detail and mutation requests use not-found semantics. “Today” is `[local midnight, next local midnight)` in `BusinessSettings.timezone`; “upcoming” starts at tomorrow’s local midnight, so the sets never overlap.
+
+Status transitions are centralized as `PENDING → CONFIRMED|CANCELLED` and `CONFIRMED → COMPLETED|CANCELLED|NO_SHOW`; terminal states have no exits. Mutation transactions re-read current status, compare it with the rendered expected status, conditionally update that exact current state, and append the actor-attributed event. A stale conditional write rolls back and becomes `409`.
 
 ## Request and mutation rules
 

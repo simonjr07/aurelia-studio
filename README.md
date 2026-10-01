@@ -10,7 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-The project currently includes the **Task 007 public booking experience**: a PostgreSQL/Prisma data layer, staff authentication foundation, public service catalogue, timezone-aware availability, concurrency-safe booking creation, and secure reference-plus-email booking lookup. Cancellation, rescheduling, and operational administration are not implemented yet.
+The project currently includes the **Task 008 appointment operations workflow**: public discovery/booking/lookup plus authenticated staff-scoped and administrator-wide appointment views, status transitions, and audit history. Service/staff administration, rescheduling, and public cancellation are not implemented yet.
 
 ## Architecture and stack
 
@@ -28,6 +28,9 @@ npm run db:migrate
 npm run db:smoke
 npm run db:bootstrap:services # create missing development catalogue entries
 npm run db:bootstrap:booking-demo # optional create-only staff/schedule demo data
+# Optionally set WORKFLOW_ADMIN_PASSWORD, WORKFLOW_STAFF_A_PASSWORD, and
+# WORKFLOW_STAFF_B_PASSWORD, then create appointment workflow QA fixtures:
+npm run db:bootstrap:appointment-workflow
 # Add development AUTH_SECRET and RATE_LIMIT_SECRET values to .env.
 # Then provide ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD in your shell:
 npm run admin:provision
@@ -64,4 +67,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-Database, staff authentication, public service browsing, advisory availability, transactional booking creation, and read-only public booking lookup are implemented. Cancellation and rescheduling remain later tasks.
+Database, public booking, secure lookup, and scoped internal appointment operations are implemented. Service/staff CRUD, cancellation, and rescheduling remain later tasks.

@@ -55,6 +55,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** support daily appointment operations.
 - **Deliverables:** today/upcoming/calendar views, detail view, valid confirm/complete/cancel/no-show actions.
 - **Acceptance:** transitions and resource scope are enforced server-side, audited, responsive, and tested.
+- **Status:** implementation complete; operational overview, today/upcoming lists, scoped detail, explicit transitions, transactional audit events, stale-write conflicts, and PostgreSQL authorization/concurrency tests are included.
 
 ## TASK-009 — Service and staff management
 

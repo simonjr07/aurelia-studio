@@ -79,6 +79,8 @@ Booking creation uses the same persistence pattern with separate `BOOKING_CREATE
 
 Public lookup adds no schema or migration. It reads `Booking` by the combined public reference and normalized customer email and explicitly projects only snapshots plus the related staff name. `PUBLIC_BOOKING_LOOKUP` uses separate HMAC buckets for reference, normalized email, and available network identity with ten attempts per 15-minute fixed window.
 
+TASK-008 adds no schema or migration. Appointment list/detail queries use existing booking snapshots, staff relation, and chronologically ordered status events. Status mutation updates `Booking.status` and inserts `BookingStatusEvent` in one transaction; a conditional `id + current status` update prevents stale writes from silently overwriting a winner.
+
 ## Remaining design decisions
 
 Opening-hours storage, pending-hold expiry, reschedule lineage, customer verification, retention, and staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).

@@ -19,6 +19,7 @@
     "db:bootstrap": "prisma db seed",
     "db:bootstrap:services": "tsx scripts/bootstrap-services.ts",
     "db:bootstrap:booking-demo": "tsx scripts/bootstrap-booking-demo.ts",
+    "db:bootstrap:appointment-workflow": "tsx scripts/bootstrap-appointment-workflow.ts",
     "db:smoke": "tsx scripts/db-smoke.ts",
     "db:studio": "prisma studio",
     "admin:provision": "tsx scripts/provision-admin.ts"

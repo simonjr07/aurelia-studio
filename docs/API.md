@@ -2,6 +2,8 @@
 
 TASK-007 adds private read-only booking verification at `/api/bookings/lookup` alongside availability and booking creation.
 
+TASK-008 adds authenticated `POST /api/admin/appointments/[id]/status`. Its strict body is `{ expectedStatus, status, note? }`. The active database-backed actor is resolved on every request; staff scope is enforced by booking ownership and admins are unscoped. Invalid bodies return `400`, missing authentication `401`, missing/out-of-scope appointments `404`, stale or forbidden transitions `409`, and unexpected failures a generic `500`.
+
 ## Interface choice
 
 - Use **Server Actions** for first-party form mutations tightly coupled to App Router views.

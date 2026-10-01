@@ -7,6 +7,7 @@
 - Authentication failures are generic. The JWT expires after eight hours and contains only id, name, email, and role.
 - Every protected request re-reads the user so deleted or disabled accounts are denied and role changes take effect without waiting for expiry.
 - Authorize every protected server operation with `requireStaff()` or `requireAdmin()` plus the future resource-scope policy. UI visibility, route naming, and client state are not controls.
+- Appointment queries and mutations enforce resource scope server-side: staff are limited to `booking.staffId === actor.id`; admins may access all. Out-of-scope ids use non-enumerating not-found behavior.
 - Reserve service/staff/settings administration for `ADMIN`; document and test each `STAFF` permission.
 
 ## Input and mutation safety
@@ -15,6 +16,7 @@
 - Use Prisma parameterization and avoid interpolated raw SQL. Review any hand-written migration SQL.
 - Protect state changes against cross-site request abuse using framework/Auth.js mechanisms and same-origin design.
 - Re-read relevant state inside transactions; never trust a client-supplied price, duration, role, status, or availability result.
+- Status actors and audit `fromStatus` always come from the active session/database state. Client expected status is used only to detect staleness, never as the audit fact.
 
 ## Public bookings and abuse controls
 
@@ -32,6 +34,7 @@
 
 - Collect only contact data required to deliver and manage an appointment.
 - Restrict staff-visible customer fields to operational need; do not expose internal user data in public responses.
+- Customer email, phone, and notes are visible only on an authorized internal appointment detail page, never lists, URLs, logs, or analytics.
 - Redact emails, phone numbers, session values, tokens, notes, and credentials from logs/errors/analytics.
 - Define retention and deletion policy before production. Backups inherit the same sensitivity.
 - Avoid placing PII or secrets in URLs, cache keys, client telemetry, test fixtures, screenshots, or commit history.

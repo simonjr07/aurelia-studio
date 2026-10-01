@@ -40,6 +40,10 @@ TASK-007 adds lookup limiter/status-label unit coverage and live PostgreSQL serv
 
 The current suite contains 78 passing tests across 18 files when PostgreSQL is configured; database suites run against the real local database rather than mocks.
 
+TASK-008 adds full state-machine unit coverage plus live PostgreSQL operations tests for New York today/upcoming boundaries, deterministic ordering, staff/admin list and detail scope, chronological actor-safe history, own/admin mutation, cross-staff denial, invalid-transition rollback, audit facts, and two concurrent transitions from one expected state. Existing current-user tests continue proving disabled accounts lose access.
+
+The complete suite now contains 96 passing tests across 20 files with all database integration suites active.
+
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
@@ -51,6 +55,8 @@ Availability QA uses a deterministic fixed clock in tests and checks `/api/avail
 Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bootstrap:booking-demo`. Verify specific and any-professional paths, date/time reloads, contact field errors, review, pending confirmation/reference, persisted booking/event, disappearance of the occupied slot, keyboard focus, mobile layout, pending-button lockout, and friendly stale-slot recovery. Demo bootstrap data is development-only and must never target production.
 
 Public lookup QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio-local time display correctly, the URL remains credential-free after lookup/reload, response headers prohibit storage, and no cancel/reschedule controls appear.
+
+Appointment workflow QA can use `db:bootstrap:appointment-workflow` after supplying three local passwords through the shell. Check admin-wide and staff-owned views, direct cross-staff denial, valid status changes, terminal actions, audit actor/note display, logout, and disabled-user denial. The command is create-only and production-blocked.
 
 Local database test sequence:
 

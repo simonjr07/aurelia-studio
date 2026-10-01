@@ -9,6 +9,8 @@
 - Authorize every protected server operation with `requireStaff()` or `requireAdmin()` plus the future resource-scope policy. UI visibility, route naming, and client state are not controls.
 - Appointment queries and mutations enforce resource scope server-side: staff are limited to `booking.staffId === actor.id`; admins may access all. Out-of-scope ids use non-enumerating not-found behavior.
 - Reserve service/staff/settings administration for `ADMIN`; document and test each `STAFF` permission.
+- Service/staff management pages call `requireAdmin()`, and every management API plus server-only mutation independently asserts ADMIN. Staff links being hidden is only presentation.
+- Ordinary management can create and edit STAFF only; role is forced server-side and ADMIN identities are outside the editable query boundary. Disablement takes effect through the existing database-backed current-user recheck.
 
 ## Input and mutation safety
 
@@ -48,6 +50,8 @@
 - Prevent public environment prefixes from being applied to server secrets.
 
 `AUTH_SECRET` signs authentication state. `RATE_LIMIT_SECRET` independently HMACs login-limiter identities and must be at least 32 characters. Administrator provisioning reads credentials from process environment variables and refuses production execution unless both the documented mode flag and exact confirmation phrase are supplied.
+
+Staff temporary passwords are accepted only by the create endpoint, bounded for bcrypt, hashed at cost 12 before persistence, omitted from all return selections, and never logged or displayed again. Unique email/slug database failures are translated to safe messages without raw Prisma details.
 
 ## Operational hardening
 

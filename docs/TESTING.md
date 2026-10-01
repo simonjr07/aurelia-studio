@@ -42,7 +42,11 @@ The current suite contains 78 passing tests across 18 files when PostgreSQL is c
 
 TASK-008 adds full state-machine unit coverage plus live PostgreSQL operations tests for New York today/upcoming boundaries, deterministic ordering, staff/admin list and detail scope, chronological actor-safe history, own/admin mutation, cross-staff denial, invalid-transition rollback, audit facts, and two concurrent transitions from one expected state. Existing current-user tests continue proving disabled accounts lose access.
 
-The complete suite now contains 96 passing tests across 20 files with all database integration suites active.
+Before TASK-009, the complete suite contained 96 passing tests across 20 files with all database integration suites active.
+
+TASK-009 adds exact money/slug unit tests, direct management-route authentication tests, and live PostgreSQL coverage for ADMIN versus STAFF mutation authority, slug/email uniqueness, normalized email, bcrypt persistence, forced role/status, disabled authentication, service visibility toggles, transactional assignment replacement, public eligible-staff effects, and booking snapshot preservation. Manual QA covers the responsive admin forms and direct STAFF access denial; schedule-based availability editing remains TASK-010.
+
+The complete TASK-009 suite contains 114 passing tests across 23 files with PostgreSQL configured; none of the database suites are skipped.
 
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 

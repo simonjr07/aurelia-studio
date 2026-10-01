@@ -81,6 +81,8 @@ Public lookup adds no schema or migration. It reads `Booking` by the combined pu
 
 TASK-008 adds no schema or migration. Appointment list/detail queries use existing booking snapshots, staff relation, and chronologically ordered status events. Status mutation updates `Booking.status` and inserts `BookingStatusEvent` in one transaction; a conditional `id + current status` update prevents stale writes from silently overwriting a winner.
 
+TASK-009 adds no schema or migration. It uses `Service`, STAFF `User`, and `StaffService` as designed. Database uniqueness on `Service.slug`, `User.email`, and `(staffId, serviceId)` remains authoritative. Assignment-set replacement is transactional. Service/staff deactivation replaces hard deletion, preserving restrictive booking relations and immutable service name/duration/price/currency snapshots. Staff names remain live relation data and therefore change on historical internal displays when renamed.
+
 ## Remaining design decisions
 
 Opening-hours storage, pending-hold expiry, reschedule lineage, customer verification, retention, and staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).

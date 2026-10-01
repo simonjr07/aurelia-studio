@@ -89,6 +89,12 @@ Every page and mutation first resolves an active database-backed actor. `STAFF` 
 
 Status transitions are centralized as `PENDING → CONFIRMED|CANCELLED` and `CONFIRMED → COMPLETED|CANCELLED|NO_SHOW`; terminal states have no exits. Mutation transactions re-read current status, compare it with the rendered expected status, conditionally update that exact current state, and append the actor-attributed event. A stale conditional write rolls back and becomes `409`.
 
+## Administrator catalogue and team management
+
+The `/admin/services` and `/admin/staff` leaf pages call `requireAdmin()` before data access. Thin authenticated Route Handlers call server-only management use cases that repeat the ADMIN assertion beside the database mutation. Service create/edit uses one Zod boundary and exact decimal-string money parsing. Staff creation forces `STAFF`/`ACTIVE`, normalizes email, hashes the temporary password with bcrypt cost 12, and returns an allow-listed DTO without the hash.
+
+Assignment replacement verifies the target is a STAFF account and every service exists, then deletes/recreates the set in one transaction. Services and staff are never hard-deleted. Booking snapshots are never updated; the existing live staff-name relation means older appointment displays reflect a later staff-name edit.
+
 ## Request and mutation rules
 
 1. Treat request data, search parameters, sessions, and database reads crossing a trust boundary as untrusted.

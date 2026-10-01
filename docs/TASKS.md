@@ -62,6 +62,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** give administrators catalog and team controls.
 - **Deliverables:** service/staff CRUD, activation, and staff-service assignments.
 - **Acceptance:** admin-only mutations validate dependencies and preserve historical booking data.
+- **Status:** implementation complete; admin-only service/staff pages, safe catalogue and account mutations, status controls, transactional service assignments, public-effect checks, and PostgreSQL tests are included. Services/staff are deactivated rather than deleted; schedule editing remains TASK-010.
 
 ## TASK-010 — Availability and blocked-time management
 

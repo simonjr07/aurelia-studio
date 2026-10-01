@@ -98,6 +98,18 @@ Staff may query and mutate only bookings whose `staffId` equals their active dat
 
 Centralize allowed transitions and require the client’s rendered status as an optimistic concurrency token. Inside one transaction, re-read authoritative status, validate it, conditionally update the same status, and create the audit event. Stale requests receive a conflict and cannot create impossible history.
 
+### ADR-025 — Deactivate catalogue and staff records instead of deleting
+
+Historical bookings retain restrictive relations to services and staff. Management therefore exposes publication, activation, and staff disablement but no hard delete. Service snapshot facts remain immutable; staff name is intentionally still live and a rename affects historical internal display.
+
+### ADR-026 — Replace staff assignments as one validated set
+
+Treat the submitted checkbox set as the complete assignment state. Verify a STAFF target and every referenced service, then replace links transactionally. The compound database uniqueness remains the final duplicate guard.
+
+### ADR-027 — Exact decimal-string prices at the admin boundary
+
+Accept familiar major-unit values such as `85.00`, validate at most two fractional digits, and assemble integer cents from string parts using `BigInt`. Never multiply a binary floating-point number to derive stored money.
+
 ## Human approval required
 
 | Decision | Options / impact |

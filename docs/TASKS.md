@@ -48,6 +48,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** securely retrieve customer booking details.
 - **Deliverables:** reference/verification lookup and customer-safe detail page.
 - **Acceptance:** references are non-enumerable, attempts are rate-limited, and internal/customer-extraneous data is absent.
+- **Status:** implementation complete; reference-plus-email verification, generic anti-enumeration failures, snapshot-backed DTO, status labels, persistent HMAC throttling, no-store/noindex behavior, and responsive read-only UI are tested. Cancellation and rescheduling remain later tasks.
 
 ## TASK-008 — Staff appointment workflow
 

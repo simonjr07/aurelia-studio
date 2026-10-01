@@ -11,6 +11,15 @@ export type RateLimitIncrement = {
   expiresAt: Date;
 };
 
+export type FixedWindowRateLimitRepository = {
+  incrementBuckets(entries: RateLimitIncrement[]): Promise<number[]>;
+};
+
+export type FixedWindowRateLimitPolicy = {
+  attempts: number;
+  windowMs: number;
+};
+
 export type LoginRateLimitRepository = {
   incrementLoginBuckets(entries: RateLimitIncrement[]): Promise<number[]>;
 };
@@ -31,25 +40,24 @@ export function hashRateLimitIdentity(identity: string, secret: string) {
   return createHmac("sha256", secret).update(identity).digest("hex");
 }
 
-export async function consumeLoginRateLimit({
-  accountIdentity,
-  networkIdentity,
+export async function consumeFixedWindowRateLimit({
+  identities,
   secret,
-  now = new Date(),
+  policy,
   repository,
-}: LoginRateLimitInput) {
+  now = new Date(),
+}: {
+  identities: string[];
+  secret: string;
+  policy: FixedWindowRateLimitPolicy;
+  repository: FixedWindowRateLimitRepository;
+  now?: Date;
+}) {
   const windowStartMs =
-    Math.floor(now.getTime() / LOGIN_RATE_LIMIT.windowMs) *
-    LOGIN_RATE_LIMIT.windowMs;
+    Math.floor(now.getTime() / policy.windowMs) * policy.windowMs;
   const windowStart = new Date(windowStartMs);
-  const expiresAt = new Date(windowStartMs + LOGIN_RATE_LIMIT.windowMs);
-  const identities = [`account:${accountIdentity}`];
-
-  if (networkIdentity) {
-    identities.push(`network:${networkIdentity}`);
-  }
-
-  const counts = await repository.incrementLoginBuckets(
+  const expiresAt = new Date(windowStartMs + policy.windowMs);
+  const counts = await repository.incrementBuckets(
     identities.map((identity) => ({
       keyHash: hashRateLimitIdentity(identity, secret),
       windowStart,
@@ -57,5 +65,29 @@ export async function consumeLoginRateLimit({
     })),
   );
 
-  return counts.every((count) => count <= LOGIN_RATE_LIMIT.attempts);
+  return counts.every((count) => count <= policy.attempts);
+}
+
+export async function consumeLoginRateLimit({
+  accountIdentity,
+  networkIdentity,
+  secret,
+  now = new Date(),
+  repository,
+}: LoginRateLimitInput) {
+  const identities = [`account:${accountIdentity}`];
+
+  if (networkIdentity) {
+    identities.push(`network:${networkIdentity}`);
+  }
+
+  return consumeFixedWindowRateLimit({
+    identities,
+    secret,
+    policy: LOGIN_RATE_LIMIT,
+    now,
+    repository: {
+      incrementBuckets: (entries) => repository.incrementLoginBuckets(entries),
+    },
+  });
 }

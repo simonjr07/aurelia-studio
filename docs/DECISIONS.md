@@ -82,13 +82,20 @@ For the requested instant, sort currently available eligible staff by stable UUI
 
 Use `AUR-` plus 96 cryptographically random URL-safe bits (20 characters total), retrying the whole transaction on unique collision. Enforce five attempts per 15 minutes for both normalized email and available network identity, persisted only as HMAC-SHA256 bucket keys.
 
+### ADR-021 — Verify public lookup with reference plus email
+
+Require both the opaque reference and normalized booking email in one POST-only lookup. Query both together and return the same failure for unknown reference and wrong email. Keep successful detail in transient page state rather than issuing a customer session for this read-only V1.
+
+### ADR-022 — Snapshot-backed, non-cacheable public detail
+
+Return an allow-listed DTO using booking snapshots for service name, duration, price, currency, and timezone. Current staff name is the only related-user field. Mark the management route `noindex` and every lookup response private/no-store. Lookup is deliberately read-only until cancellation and rescheduling policy is implemented.
+
 ## Human approval required
 
 | Decision | Options / impact |
 | --- | --- |
 | Studio timezone and default currency | Bootstrap is set by TASK-002 to `America/New_York` and USD; business confirmation is still required before production. |
 | Pending hold expiry | `PENDING` currently occupies capacity. Define its expiry/cleanup policy before public booking creation. |
-| Public lookup verification | Reference + email, reference + phone fragment, or signed management token; balance convenience and privacy. |
 | Reschedule history model | Mutate one booking with structured events, or cancel/replace with linked bookings; replacement gives clearer immutable history. |
 | Staff appointment scope | Assigned appointments only, all operational appointments, or configurable permission. |
 | Staff blocked-time scope | Own time only versus manager-approved broader access. |

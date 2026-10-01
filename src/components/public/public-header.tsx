@@ -21,12 +21,12 @@ export function PublicHeader() {
           >
             Services
           </Link>
-          <span
-            aria-disabled="true"
-            className="hidden min-h-11 items-center rounded-full border border-ink/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-ink/50 sm:inline-flex"
+          <Link
+            className="hidden min-h-11 items-center rounded-full border border-ink/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-ink/65 transition hover:border-clay hover:text-clay sm:inline-flex"
+            href="/manage-booking"
           >
-            Booking coming next
-          </span>
+            Manage booking
+          </Link>
         </div>
       </nav>
     </header>

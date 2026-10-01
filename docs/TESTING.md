@@ -36,7 +36,9 @@ TASK-005 adds pure slot-engine coverage for duration, interval-grid alignment, m
 
 TASK-006 adds deterministic reference and booking-limiter unit tests plus live PostgreSQL booking-service/API integration. Coverage proves authoritative snapshots/end time, normalized contact data, atomic initial status history, specific-staff rejection, deterministic any-available fallback, unavailable-service hiding, whole-transaction collision retry, safe response fields/statuses, and throttling. Its concurrency test launches two real creates for the same staff/instant and asserts exactly one booking commits while the loser becomes `BookingConflictError`.
 
-The current suite contains 65 passing tests across 15 files when PostgreSQL is configured; database suites are not mocked.
+TASK-007 adds lookup limiter/status-label unit coverage and live PostgreSQL service/API verification. Tests change the live service facts while retaining original booking snapshots, prove normalized two-factor matching, compare wrong-email and unknown-reference failures, inspect the exact safe DTO, cover all five status labels, enforce private no-store headers, verify generic internal errors, and inspect persisted limiter rows for HMAC-only identities.
+
+The current suite contains 78 passing tests across 18 files when PostgreSQL is configured; database suites run against the real local database rather than mocks.
 
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
@@ -47,6 +49,8 @@ Public catalogue QA runs `npm run db:bootstrap:services`, then checks `/`, `/ser
 Availability QA uses a deterministic fixed clock in tests and checks `/api/availability` with a real service/date, an invalid date, a private service, and optional staff id. DST tests use `America/New_York` explicitly and never depend on the machine timezone. Results are advisory and must not be described as reservations.
 
 Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bootstrap:booking-demo`. Verify specific and any-professional paths, date/time reloads, contact field errors, review, pending confirmation/reference, persisted booking/event, disappearance of the occupied slot, keyboard focus, mobile layout, pending-button lockout, and friendly stale-slot recovery. Demo bootstrap data is development-only and must never target production.
+
+Public lookup QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio-local time display correctly, the URL remains credential-free after lookup/reload, response headers prohibit storage, and no cancel/reschedule controls appear.
 
 Local database test sequence:
 

@@ -23,7 +23,7 @@ The schema defines:
 - `Booking` with `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, and `NO_SHOW` states.
 - Append-only `BookingStatusEvent` rows with an optional authenticated actor.
 - Singleton `BusinessSettings` for timezone, currency, booking rules, and public contacts.
-- `RateLimitBucket` keyed by action, an HMAC identity, and window start. `LOGIN` and `BOOKING_CREATE` are active; public lookup remains future work.
+- `RateLimitBucket` keyed by action, an HMAC identity, and window start. `LOGIN`, `BOOKING_CREATE`, and `PUBLIC_BOOKING_LOOKUP` are active.
 
 Internal identifiers are UUIDs. Customer accounts are intentionally absent. Services and staff referenced by bookings use restrictive deletion, while every booking snapshots the service name, duration, price, currency, and timezone so catalog changes cannot rewrite history.
 
@@ -76,6 +76,8 @@ TASK-006 also requires no schema or migration change. A single database transact
 The authentication adapter stores fixed-window login counters in `RateLimitBucket`. Account and available network identifiers are separately HMAC-SHA256 digested with `RATE_LIMIT_SECRET`; plaintext emails and network values are never bucket keys. Atomic PostgreSQL upserts increment each counter, and authentication is rejected once either identity reaches ten attempts in a 15-minute window. Expired buckets are safe to remove in future maintenance work.
 
 Booking creation uses the same persistence pattern with separate `BOOKING_CREATE` buckets: five attempts per 15-minute fixed window for normalized email and available network identity.
+
+Public lookup adds no schema or migration. It reads `Booking` by the combined public reference and normalized customer email and explicitly projects only snapshots plus the related staff name. `PUBLIC_BOOKING_LOOKUP` uses separate HMAC buckets for reference, normalized email, and available network identity with ten attempts per 15-minute fixed window.
 
 ## Remaining design decisions
 

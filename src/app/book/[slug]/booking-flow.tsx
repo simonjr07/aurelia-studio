@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { formatDuration, formatPrice } from "@/lib/formatters";
 import type { PublicServiceDetail } from "@/server/services/public-service-queries";
@@ -191,8 +192,8 @@ export function BookingFlow({
           </p>
           <h2 className="mt-4 font-display text-5xl">Your visit is pending.</h2>
           <p className="mt-5 leading-7 text-ink/65">
-            Keep this reference safe. Booking management using your reference
-            will be available in a future update.
+            Keep this reference safe. You can view this booking using the
+            reference and the email entered at checkout.
           </p>
           <p className="mt-8 select-all rounded-2xl bg-ink px-6 py-5 font-mono text-2xl font-bold tracking-wider text-cream sm:text-3xl">
             {confirmation.reference}
@@ -205,6 +206,12 @@ export function BookingFlow({
             <div><dt className="text-sm text-ink/50">Duration</dt><dd className="mt-1 font-semibold">{formatDuration(confirmation.durationMinutes)}</dd></div>
             <div><dt className="text-sm text-ink/50">Price</dt><dd className="mt-1 font-semibold">{formatPrice(confirmation.priceCents, confirmation.currency)}</dd></div>
           </dl>
+          <Link
+            className="mt-8 inline-flex min-h-12 items-center rounded-full bg-ink px-7 font-semibold text-cream"
+            href="/manage-booking"
+          >
+            Manage this booking
+          </Link>
         </div>
       </section>
     );

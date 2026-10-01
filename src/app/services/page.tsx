@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 
 function CatalogueSkeleton() {
   return (
-    <div aria-label="Loading services" className="grid gap-6 md:grid-cols-2">
+    <div aria-label="Loading services" aria-live="polite" className="grid gap-5 md:grid-cols-2">
       {[0, 1, 2, 3].map((item) => (
         <div
           aria-hidden="true"
-          className="min-h-[25rem] animate-pulse rounded-[2rem] border border-ink/10 bg-white/35"
+          className="min-h-[23rem] animate-pulse border border-ink/10 bg-paper/45"
           key={item}
         />
       ))}
@@ -34,14 +34,14 @@ async function Catalogue() {
 
   if (services.length === 0) {
     return (
-      <div className="rounded-[2rem] border border-ink/10 bg-white/55 px-7 py-16 text-center sm:px-12">
+      <div className="public-surface px-7 py-16 text-center sm:px-12">
         <h2 className="font-display text-3xl">Our menu is being prepared</h2>
         <p className="mx-auto mt-4 max-w-xl leading-7 text-ink/60">
           No services are available online just yet. Please check back soon as
           we finish curating the studio catalogue.
         </p>
         <Link
-          className="mt-8 inline-flex min-h-11 items-center rounded-full border border-ink/15 px-5 text-sm font-semibold"
+          className="public-button-secondary mt-8"
           href="/"
         >
           Return home
@@ -51,7 +51,7 @@ async function Catalogue() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-5 md:grid-cols-2">
       {services.map((service, index) => (
         <ServiceCard index={index} key={service.id} service={service} />
       ))}
@@ -61,21 +61,20 @@ async function Catalogue() {
 
 export default function ServicesPage() {
   return (
-    <main className="min-h-screen bg-cream text-ink">
+    <main className="public-shell">
       <PublicHeader />
-      <section className="mx-auto w-full max-w-7xl px-6 pb-24 pt-16 sm:px-10 sm:pt-20 lg:px-12 lg:pb-32">
+      <section className="public-container pb-24 pt-14 sm:pt-20 lg:pb-28">
         <div className="grid gap-8 border-b border-ink/10 pb-14 lg:grid-cols-[1fr_0.65fr] lg:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-clay">
+            <p className="public-eyebrow">
               The studio menu
             </p>
-            <h1 className="mt-5 max-w-3xl font-display text-6xl leading-[0.98] tracking-[-0.04em] sm:text-7xl">
-              Care, considered for you.
+            <h1 className="public-display mt-5 max-w-3xl text-6xl leading-[0.94] sm:text-7xl">
+              A menu with room to breathe.
             </h1>
           </div>
           <p className="max-w-xl text-lg leading-8 text-ink/60 lg:justify-self-end">
-            Explore restorative treatments with transparent timing and pricing.
-            Online appointment selection will follow in the next release.
+            Explore each service with clear timing, pricing, and professional availability—then reserve online when you’re ready.
           </p>
         </div>
         <div className="pt-10 sm:pt-14">

@@ -185,19 +185,23 @@ export function BookingFlow({
 
   if (stage === "confirmed" && confirmation) {
     return (
-      <section className="mx-auto w-full max-w-4xl px-6 py-16 sm:px-10 sm:py-24">
-        <div className="rounded-[2.5rem] border border-sage/40 bg-white/65 p-7 shadow-xl shadow-ink/5 sm:p-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-clay">
+      <section className="public-container max-w-4xl py-16 sm:py-24">
+        <div className="public-surface overflow-hidden p-7 sm:p-12">
+          <div className="mb-8 grid h-14 w-14 place-items-center rounded-full bg-sage text-2xl text-cream" aria-hidden="true">✓</div>
+          <p className="public-eyebrow">
             Booking received
           </p>
-          <h2 className="mt-4 font-display text-5xl">Your visit is pending.</h2>
+          <h2 className="public-display mt-4 text-5xl">Your visit is pending.</h2>
           <p className="mt-5 leading-7 text-ink/65">
             Keep this reference safe. You can view this booking using the
             reference and the email entered at checkout.
           </p>
-          <p className="mt-8 select-all rounded-2xl bg-ink px-6 py-5 font-mono text-2xl font-bold tracking-wider text-cream sm:text-3xl">
+          <div className="mt-8 border-y border-ink/10 bg-cream/55 px-5 py-6 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink/50">Booking reference</p>
+            <p className="mt-2 select-all font-mono text-2xl font-bold tracking-wider text-ink sm:text-3xl">
             {confirmation.reference}
-          </p>
+            </p>
+          </div>
           <dl className="mt-8 grid gap-5 border-t border-ink/10 pt-8 sm:grid-cols-2">
             <div><dt className="text-sm text-ink/50">Service</dt><dd className="mt-1 font-semibold">{confirmation.serviceName}</dd></div>
             <div><dt className="text-sm text-ink/50">Professional</dt><dd className="mt-1 font-semibold">{confirmation.staffName}</dd></div>
@@ -207,7 +211,7 @@ export function BookingFlow({
             <div><dt className="text-sm text-ink/50">Price</dt><dd className="mt-1 font-semibold">{formatPrice(confirmation.priceCents, confirmation.currency)}</dd></div>
           </dl>
           <Link
-            className="mt-8 inline-flex min-h-12 items-center rounded-full bg-ink px-7 font-semibold text-cream"
+            className="public-button-primary mt-8"
             href="/manage-booking"
           >
             Manage this booking
@@ -220,12 +224,17 @@ export function BookingFlow({
   const activeIndex = steps.findIndex((step) => step.id === stage);
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-10 sm:py-20">
+    <section className="public-container max-w-6xl py-10 sm:py-16">
+      <div className="mb-3 flex items-center justify-between sm:hidden">
+        <p className="public-eyebrow">Step {activeIndex + 1} of {steps.length}</p>
+        <p className="text-sm font-bold">{steps[activeIndex]?.label}</p>
+      </div>
       <ol aria-label="Booking progress" className="grid grid-cols-5 gap-2">
         {steps.map((step, index) => (
-          <li className="min-w-0" key={step.id}>
+          <li aria-current={index === activeIndex ? "step" : undefined} className="min-w-0" key={step.id}>
             <div className={`h-1.5 rounded-full ${index <= activeIndex ? "bg-clay" : "bg-ink/10"}`} />
-            <span className={`mt-2 block truncate text-xs ${index === activeIndex ? "font-bold" : "text-ink/45"}`}>
+            <span className={`mt-2 hidden items-center gap-2 truncate text-xs sm:flex ${index === activeIndex ? "font-bold text-ink" : "text-ink/45"}`}>
+              <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[0.65rem] ${index < activeIndex ? "bg-sage text-cream" : "border border-current"}`}>{index < activeIndex ? "✓" : index + 1}</span>
               {step.label}
             </span>
           </li>
@@ -233,81 +242,83 @@ export function BookingFlow({
       </ol>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_20rem]">
-        <div className="rounded-[2rem] border border-ink/10 bg-white/60 p-6 sm:p-9">
-          {submitError ? <p className="mb-6 rounded-xl bg-clay/10 p-4 text-sm font-semibold text-clay" role="alert">{submitError}</p> : null}
+        <div className="public-surface p-6 sm:p-9">
+          {submitError ? <p className="public-alert-error mb-6" role="alert">{submitError}</p> : null}
 
           {stage === "staff" ? (
             <fieldset>
-              <legend className="font-display text-4xl">Who would you like to see?</legend>
+              <legend className="public-display text-4xl">Who would you like to see?</legend>
               <p className="mt-3 text-ink/60">Choose a professional or let us assign anyone available.</p>
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {[{ id: "", name: "Any available" }, ...service.eligibleStaff].map((staff) => (
-                  <label className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 font-semibold ${staffId === staff.id ? "border-clay bg-clay/10" : "border-ink/10"}`} key={staff.id || "any"}>
+                  <label className={`group flex min-h-20 cursor-pointer items-center gap-4 border px-5 font-semibold transition ${staffId === staff.id ? "border-clay bg-clay/8 shadow-[inset_4px_0_0_var(--clay)]" : "border-ink/10 bg-paper/40 hover:border-ink/25"}`} key={staff.id || "any"}>
                     <input checked={staffId === staff.id} name="staff" onChange={() => setStaffId(staff.id)} type="radio" />
-                    {staff.name}<span className="sr-only">{staffId === staff.id ? " selected" : ""}</span>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sage/10 font-display text-xl text-sage" aria-hidden="true">{staff.name.charAt(0)}</span>
+                    <span>{staff.name}<span className="block text-xs font-normal text-ink/50">{staff.id ? "Choose this professional" : "Best available professional"}</span></span><span className="sr-only">{staffId === staff.id ? " selected" : ""}</span>
                   </label>
                 ))}
               </div>
-              <button className="mt-8 min-h-12 rounded-full bg-ink px-7 font-semibold text-cream" onClick={() => setStage("date")} type="button">Continue</button>
+              <button className="public-button-primary mt-8" onClick={() => setStage("date")} type="button">Continue to date</button>
             </fieldset>
           ) : null}
 
           {stage === "date" ? (
             <div>
-              <h2 className="font-display text-4xl">Choose a date</h2>
+              <h2 className="public-display text-4xl">Choose a date</h2>
               <p className="mt-3 text-ink/60">Dates and times are shown in the studio timezone ({timezone}).</p>
               <label className="mt-8 block max-w-sm font-semibold" htmlFor="booking-date">Appointment date</label>
-              <input className="mt-2 min-h-12 w-full max-w-sm rounded-xl border border-ink/20 bg-white px-4" id="booking-date" max={maximumDate} min={initialDate} onChange={(event) => { setDate(event.target.value); setSelectedSlot(null); }} type="date" value={date} />
-              <div className="mt-8 flex gap-3"><button className="min-h-12 rounded-full border border-ink/20 px-6 font-semibold" onClick={() => setStage("staff")} type="button">Back</button><button className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream disabled:opacity-50" disabled={!date} onClick={openTimeSelection} type="button">Find times</button></div>
+              <input className="public-field mt-2 max-w-sm" id="booking-date" max={maximumDate} min={initialDate} onChange={(event) => { setDate(event.target.value); setSelectedSlot(null); }} type="date" value={date} />
+              <div className="mt-8 flex gap-3"><button className="public-button-secondary" onClick={() => setStage("staff")} type="button">Back</button><button className="public-button-primary" disabled={!date} onClick={openTimeSelection} type="button">Find times</button></div>
             </div>
           ) : null}
 
           {stage === "time" ? (
             <div>
-              <h2 className="font-display text-4xl">Choose a time</h2>
+              <h2 className="public-display text-4xl">Choose a time</h2>
               <p className="mt-3 text-ink/60">All times are {timezone}.</p>
               <div aria-live="polite" className="mt-8">
-                {loadingSlots ? <p>Loading available times…</p> : null}
-                {availabilityError ? <p className="rounded-xl bg-clay/10 p-4 text-clay" role="alert">{availabilityError}</p> : null}
-                {!loadingSlots && !availabilityError && slots.length === 0 ? <p className="rounded-xl bg-ink/5 p-5">No times are available on this date. Try another date or professional.</p> : null}
+                {loadingSlots ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Loading available times">{[0,1,2,3,4,5].map((item) => <span className="h-12 animate-pulse rounded-xl bg-ink/8" key={item} />)}</div> : null}
+                {availabilityError ? <p className="public-alert-error" role="alert">{availabilityError}</p> : null}
+                {!loadingSlots && !availabilityError && slots.length === 0 ? <div className="public-alert-info"><p className="font-bold">No times on this date</p><p className="mt-1">Try another date or return to choose a different professional.</p></div> : null}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {slots.map((slot) => (
-                    <button aria-pressed={selectedSlot?.startAt === slot.startAt} className={`min-h-12 rounded-xl border font-semibold ${selectedSlot?.startAt === slot.startAt ? "border-clay bg-clay text-white" : "border-ink/15 bg-white"}`} key={slot.startAt} onClick={() => setSelectedSlot(slot)} type="button">{slot.localTimeLabel}</button>
+                    <button aria-pressed={selectedSlot?.startAt === slot.startAt} className={`min-h-12 rounded-xl border font-semibold transition ${selectedSlot?.startAt === slot.startAt ? "border-sage bg-sage text-cream shadow-md" : "border-ink/15 bg-paper hover:border-clay hover:text-clay"}`} key={slot.startAt} onClick={() => setSelectedSlot(slot)} type="button">{slot.localTimeLabel}<span className="sr-only">{selectedSlot?.startAt === slot.startAt ? " selected" : ""}</span></button>
                   ))}
                 </div>
               </div>
-              <div className="mt-8 flex gap-3"><button className="min-h-12 rounded-full border border-ink/20 px-6 font-semibold" onClick={() => setStage("date")} type="button">Back</button><button className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream disabled:opacity-50" disabled={!selectedSlot} onClick={() => { setSubmitError(""); setStage("details"); }} type="button">Continue</button></div>
+              <div className="mt-8 flex gap-3"><button className="public-button-secondary" onClick={() => setStage("date")} type="button">Back</button><button className="public-button-primary" disabled={!selectedSlot} onClick={() => { setSubmitError(""); setStage("details"); }} type="button">Continue to details</button></div>
             </div>
           ) : null}
 
           {stage === "details" ? (
             <form onSubmit={(event) => { event.preventDefault(); if (validateDetails()) setStage("review"); }}>
-              <h2 className="font-display text-4xl">Your details</h2>
+              <h2 className="public-display text-4xl">Your details</h2>
               <p className="mt-3 text-ink/60">We’ll use these details only for your appointment.</p>
               <div className="mt-8 grid gap-5 sm:grid-cols-2">
                 {(["customerName", "customerEmail", "customerPhone"] as const).map((field) => {
                   const labels = { customerName: "Name", customerEmail: "Email", customerPhone: "Phone" };
-                  return <label className={field === "customerPhone" ? "sm:col-span-2" : ""} key={field}><span className="font-semibold">{labels[field]}</span><input aria-describedby={fieldErrors[field] ? `${field}-error` : undefined} aria-invalid={Boolean(fieldErrors[field])} className="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4" onChange={(event) => updateDetail(field, event.target.value)} required type={field === "customerEmail" ? "email" : field === "customerPhone" ? "tel" : "text"} value={details[field]} />{fieldErrors[field]?.map((error) => <span className="mt-1 block text-sm text-clay" id={`${field}-error`} key={error}>{error}</span>)}</label>;
+                  return <label className={field === "customerPhone" ? "sm:col-span-2" : ""} key={field}><span className="text-sm font-bold">{labels[field]}</span><input aria-describedby={fieldErrors[field] ? `${field}-error` : undefined} aria-invalid={Boolean(fieldErrors[field])} className="public-field mt-2" onChange={(event) => updateDetail(field, event.target.value)} required type={field === "customerEmail" ? "email" : field === "customerPhone" ? "tel" : "text"} value={details[field]} />{fieldErrors[field]?.map((error) => <span className="mt-1 block text-sm text-clay" id={`${field}-error`} key={error}>{error}</span>)}</label>;
                 })}
-                <label className="sm:col-span-2"><span className="font-semibold">Note <span className="font-normal text-ink/45">(optional)</span></span><textarea aria-describedby={fieldErrors.customerNote ? "customerNote-error" : undefined} className="mt-2 min-h-28 w-full rounded-xl border border-ink/20 bg-white p-4" maxLength={2000} onChange={(event) => updateDetail("customerNote", event.target.value)} value={details.customerNote} />{fieldErrors.customerNote?.map((error) => <span className="mt-1 block text-sm text-clay" id="customerNote-error" key={error}>{error}</span>)}</label>
+                <label className="sm:col-span-2"><span className="text-sm font-bold">Note <span className="font-normal text-ink/45">(optional)</span></span><textarea aria-describedby={fieldErrors.customerNote ? "customerNote-error" : undefined} className="public-field mt-2 min-h-28 resize-y" maxLength={2000} onChange={(event) => updateDetail("customerNote", event.target.value)} value={details.customerNote} /><span className="mt-1 block text-xs text-ink/45">Share only what the studio needs to prepare for your visit.</span>{fieldErrors.customerNote?.map((error) => <span className="mt-1 block text-sm text-clay" id="customerNote-error" key={error}>{error}</span>)}</label>
               </div>
-              <div className="mt-8 flex gap-3"><button className="min-h-12 rounded-full border border-ink/20 px-6 font-semibold" onClick={openTimeSelection} type="button">Back</button><button className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream" type="submit">Review booking</button></div>
+              <div className="mt-8 flex gap-3"><button className="public-button-secondary" onClick={openTimeSelection} type="button">Back</button><button className="public-button-primary" type="submit">Review booking</button></div>
             </form>
           ) : null}
 
           {stage === "review" && selectedSlot ? (
             <div>
-              <h2 className="font-display text-4xl">Review your booking</h2>
-              <dl className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
+              <p className="public-eyebrow">One last look</p>
+              <h2 className="public-display mt-3 text-4xl">Review your booking</h2>
+              <dl className="mt-8 divide-y divide-ink/10 border-y border-ink/10 bg-cream/35 px-5 sm:px-6">
                 {[["Service", service.name], ["Professional", selectedStaffName ?? "Any available"], ["Date and time", formatStudioDateTime(selectedSlot.startAt, timezone)], ["Duration", formatDuration(service.durationMinutes)], ["Price", formatPrice(service.priceCents, service.currency)], ["Name", details.customerName], ["Email", details.customerEmail], ["Phone", details.customerPhone], ...(details.customerNote.trim() ? [["Note", details.customerNote]] : [])].map(([label, value]) => <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]" key={label}><dt className="text-sm text-ink/50">{label}</dt><dd className="font-semibold">{value}</dd></div>)}
               </dl>
               <p className="mt-6 text-sm leading-6 text-ink/55">Availability is checked again when you confirm. Your booking begins with pending status.</p>
-              <div className="mt-8 flex flex-wrap gap-3"><button className="min-h-12 rounded-full border border-ink/20 px-6 font-semibold" disabled={submitting} onClick={() => setStage("details")} type="button">Back</button><button className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream disabled:cursor-wait disabled:opacity-60" disabled={submitting} onClick={submitBooking} type="button">{submitting ? "Confirming…" : "Confirm booking"}</button></div>
+              <div className="mt-8 flex flex-wrap gap-3"><button className="public-button-secondary" disabled={submitting} onClick={() => setStage("details")} type="button">Back</button><button className="public-button-primary" disabled={submitting} onClick={submitBooking} type="button">{submitting ? "Confirming…" : "Confirm booking"}</button></div>
             </div>
           ) : null}
         </div>
 
-        <aside className="h-fit rounded-[2rem] bg-sage p-7 text-cream lg:sticky lg:top-6">
+        <aside className="public-grid-texture h-fit overflow-hidden rounded-[1.5rem] bg-sage p-7 text-cream lg:sticky lg:top-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/70">Your selection</p>
           <h2 className="mt-4 font-display text-3xl">{service.name}</h2>
           <p className="mt-4 text-sm leading-6 text-cream/80">{formatDuration(service.durationMinutes)} · {formatPrice(service.priceCents, service.currency)}</p>

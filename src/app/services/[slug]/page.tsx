@@ -43,26 +43,26 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-cream text-ink">
+    <main className="public-shell">
       <PublicHeader />
       <article>
         <section className="relative overflow-hidden border-b border-ink/10">
-          <div className="mx-auto grid w-full max-w-7xl gap-14 px-6 py-16 sm:px-10 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:px-12 lg:py-28">
+          <div className="public-container grid gap-14 py-14 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
             <div className="relative z-10">
               <Link
-                className="inline-flex min-h-11 items-center text-sm font-semibold underline decoration-clay/45 underline-offset-8 hover:decoration-clay"
+                className="public-button-quiet -ml-4"
                 href="/services"
               >
                 ← All services
               </Link>
-              <p className="mt-12 text-xs font-semibold uppercase tracking-[0.26em] text-clay">
+              <p className="public-eyebrow mt-10">
                 Aurelia Studio service
               </p>
-              <h1 className="mt-5 max-w-4xl font-display text-6xl leading-[0.95] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
+              <h1 className="public-display mt-5 max-w-4xl text-6xl leading-[0.9] sm:text-7xl lg:text-8xl">
                 {service.name}
               </h1>
             </div>
-            <div className="relative flex min-h-72 items-end overflow-hidden rounded-[2.5rem] bg-sage p-8 text-cream shadow-2xl shadow-ink/10 sm:p-10">
+            <div className="public-grid-texture relative flex min-h-72 items-end overflow-hidden rounded-[45%_45%_1.5rem_1.5rem] bg-sage p-8 text-cream shadow-2xl shadow-ink/10 sm:p-10">
               <div
                 aria-hidden="true"
                 className="absolute -right-16 -top-20 h-72 w-72 rounded-full border border-cream/45"
@@ -79,9 +79,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </div>
         </section>
 
-        <section className="mx-auto grid w-full max-w-7xl gap-14 px-6 py-16 sm:px-10 sm:py-20 lg:grid-cols-[1fr_0.7fr] lg:px-12 lg:py-24">
+        <section className="public-container grid gap-14 py-16 sm:py-20 lg:grid-cols-[1fr_0.7fr] lg:py-24">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-clay">
+            <p className="public-eyebrow">
               About this service
             </p>
             <p className="mt-6 max-w-3xl font-display text-3xl leading-[1.35] tracking-[-0.015em] sm:text-4xl">
@@ -94,23 +94,23 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                   {service.eligibleStaff.map((staff) => (
                     <li
-                      className="rounded-2xl border border-ink/10 bg-white/45 px-5 py-4 font-semibold"
+                      className="flex min-h-16 items-center gap-3 border border-ink/10 bg-paper/55 px-5 py-4 font-semibold"
                       key={staff.id}
                     >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sage/10 font-display text-lg text-sage" aria-hidden="true">{staff.name.charAt(0)}</span>
                       {staff.name}
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="mt-4 leading-7 text-ink/60">
-                  No staff assigned yet. Appointment selection will become
-                  available once the studio schedule is ready.
+                  No professionals are currently available for online booking. Please choose another service or check back soon.
                 </p>
               )}
             </section>
           </div>
 
-          <aside className="h-fit rounded-[2rem] border border-ink/10 bg-white/60 p-7 shadow-[0_24px_70px_rgba(32,35,31,0.06)] sm:p-9">
+          <aside className="public-surface h-fit p-7 sm:p-9 lg:sticky lg:top-6">
             <h2 className="font-display text-3xl">Service details</h2>
             <dl className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
               <div className="flex items-center justify-between gap-4 py-5">
@@ -126,15 +126,23 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 </dd>
               </div>
             </dl>
-            <Link
-              className="mt-8 flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 text-sm font-semibold text-cream transition hover:bg-clay"
-              href={`/book/${service.slug}`}
-            >
-              Choose a time
-            </Link>
-            <p className="mt-4 text-center text-xs leading-5 text-ink/50">
-              Availability is rechecked when you confirm.
-            </p>
+            {service.eligibleStaff.length > 0 ? (
+              <>
+                <Link
+                  className="public-button-primary mt-8 w-full"
+                  href={`/book/${service.slug}`}
+                >
+                  Choose a time
+                </Link>
+                <p className="mt-4 text-center text-xs leading-5 text-ink/50">
+                  Availability is rechecked when you confirm.
+                </p>
+              </>
+            ) : (
+              <div className="public-alert-info mt-8">
+                Online booking is not available for this service right now. Explore the menu for another option.
+              </div>
+            )}
           </aside>
         </section>
       </article>

@@ -144,9 +144,9 @@ export function ManageBooking() {
 
   if (booking) {
     return (
-      <section className="mx-auto w-full max-w-5xl px-6 py-14 sm:px-10 sm:py-20">
-        <div className="overflow-hidden rounded-[2.5rem] border border-ink/10 bg-white/65 shadow-xl shadow-ink/5">
-          <div className="flex flex-col gap-5 bg-sage p-7 text-cream sm:flex-row sm:items-end sm:justify-between sm:p-10">
+      <section className="public-container max-w-5xl py-14 sm:py-20">
+        <div className="public-surface min-w-0 overflow-hidden">
+          <div className="public-grid-texture flex flex-col gap-5 bg-sage p-7 text-cream sm:flex-row sm:items-end sm:justify-between sm:p-10">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cream/70">
                 Verified booking
@@ -155,12 +155,12 @@ export function ManageBooking() {
                 {booking.serviceName}
               </h2>
             </div>
-            <span className="w-fit rounded-full border border-cream/35 px-4 py-2 text-sm font-bold">
+            <span className="w-fit rounded-full border border-cream/35 bg-cream/10 px-4 py-2 text-sm font-bold">
               {booking.statusLabel}
             </span>
           </div>
 
-          <div className="p-7 sm:p-10">
+          <div className="min-w-0 p-7 sm:p-10">
             <p className="text-sm text-ink/50">Booking reference</p>
             <p className="mt-2 select-all font-mono text-2xl font-bold tracking-wider sm:text-3xl">
               {booking.reference}
@@ -201,26 +201,26 @@ export function ManageBooking() {
               </div>
             </dl>
 
-            <div className="mt-7 rounded-2xl bg-cream p-5 text-sm leading-6 text-ink/60">
+            <div className="public-alert-info mt-7">
               <p>Online cancellation is available until {studioTime(booking.cancellationCutoffAt, booking.timezone)} on {studioDate(booking.cancellationCutoffAt, booking.timezone)} ({booking.cancellationCutoffMinutes} minutes before the appointment).</p>
               <p className="mt-2">Online rescheduling is available until {studioTime(booking.rescheduleCutoffAt, booking.timezone)} on {studioDate(booking.rescheduleCutoffAt, booking.timezone)} ({booking.rescheduleCutoffMinutes} minutes before the appointment).</p>
             </div>
-            {error ? <p className="mt-5 rounded-xl bg-clay/10 p-4 text-sm font-semibold text-clay" role="alert">{error}</p> : null}
-            {mode === "cancel" ? <section className="mt-6 rounded-2xl border border-clay/30 p-5"><h3 className="font-display text-2xl">Cancel this booking?</h3><p className="mt-3 text-sm leading-6">This will cancel {booking.serviceName} on {studioDate(booking.startAt, booking.timezone)} at {studioTime(booking.startAt, booking.timezone)}. Reference {booking.reference} will remain available for your records.</p><div className="mt-5 flex gap-3"><button className="min-h-11 rounded-full bg-clay px-5 font-semibold text-white disabled:opacity-50" disabled={pending} onClick={cancelBooking} type="button">{pending ? "Cancelling…" : "Confirm cancellation"}</button><button className="min-h-11 rounded-full border border-ink/20 px-5 font-semibold" onClick={() => setMode(null)} type="button">Keep booking</button></div></section> : null}
-            {mode === "reschedule" ? <section className="mt-6 rounded-2xl border border-ink/15 p-5"><h3 className="font-display text-2xl">Choose a new time</h3><div className="mt-4 grid gap-3 sm:grid-cols-3"><label className="text-sm font-semibold">New date<input className="mt-2 min-h-11 w-full rounded-xl border border-ink/20 px-3" onChange={(event) => setRescheduleDate(event.target.value)} type="date" value={rescheduleDate} /></label><label className="text-sm font-semibold">Professional<select className="mt-2 min-h-11 w-full rounded-xl border border-ink/20 px-3" onChange={(event) => setRescheduleStaff(event.target.value)} value={rescheduleStaff}><option value="">Any available</option><option value={booking.staffId}>Keep {booking.staffName}</option></select></label><button className="mt-6 min-h-11 rounded-full bg-ink px-5 font-semibold text-cream disabled:opacity-50" disabled={!rescheduleDate || pending} onClick={loadSlots} type="button">{pending ? "Checking…" : "Check times"}</button></div>{slots.length > 0 ? <div className="mt-5 flex flex-wrap gap-2">{slots.map((slot) => <button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${selectedStartAt === slot.startAt ? "bg-sage text-cream" : "border-ink/20"}`} key={slot.startAt} onClick={() => setSelectedStartAt(slot.startAt)} type="button">{slot.localTimeLabel}</button>)}</div> : null}{selectedStartAt ? <div className="mt-6 rounded-xl bg-cream p-4"><p className="font-semibold">Review: {studioDate(booking.startAt, booking.timezone)} {studioTime(booking.startAt, booking.timezone)} → {studioDate(selectedStartAt, booking.timezone)} {studioTime(selectedStartAt, booking.timezone)}</p><button className="mt-4 min-h-11 rounded-full bg-ink px-5 font-semibold text-cream disabled:opacity-50" disabled={pending} onClick={confirmReschedule} type="button">{pending ? "Rescheduling…" : "Confirm reschedule"}</button></div> : null}</section> : null}
+            {error ? <p className="public-alert-error mt-5" role="alert">{error}</p> : null}
+            {mode === "cancel" ? <section aria-labelledby="cancel-heading" className="mt-6 border border-clay/30 bg-clay/5 p-5 sm:p-6"><p className="public-eyebrow">Please confirm</p><h3 className="public-display mt-2 text-3xl" id="cancel-heading">Cancel this booking?</h3><p className="mt-3 text-sm leading-6">This will cancel {booking.serviceName} on {studioDate(booking.startAt, booking.timezone)} at {studioTime(booking.startAt, booking.timezone)}. Reference {booking.reference} will remain available for your records.</p><div className="mt-5 flex flex-wrap gap-3"><button className="public-button-danger" disabled={pending} onClick={cancelBooking} type="button">{pending ? "Cancelling…" : "Yes, cancel booking"}</button><button className="public-button-secondary" onClick={() => setMode(null)} type="button">Keep booking</button></div></section> : null}
+            {mode === "reschedule" ? <section aria-labelledby="reschedule-heading" className="mt-6 border border-ink/15 bg-cream/35 p-5 sm:p-6"><p className="public-eyebrow">Reschedule</p><h3 className="public-display mt-2 text-3xl" id="reschedule-heading">Choose a new time</h3><p className="mt-2 text-sm leading-6 text-ink/60">Your service and booking reference will stay the same.</p><div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-end"><label className="text-sm font-bold">New date<input className="public-field mt-2" onChange={(event) => setRescheduleDate(event.target.value)} type="date" value={rescheduleDate} /></label><label className="text-sm font-bold">Professional<select className="public-field mt-2" onChange={(event) => setRescheduleStaff(event.target.value)} value={rescheduleStaff}><option value="">Any available</option><option value={booking.staffId}>Keep {booking.staffName}</option></select></label><button className="public-button-primary" disabled={!rescheduleDate || pending} onClick={loadSlots} type="button">{pending ? "Checking…" : "Check times"}</button></div>{slots.length > 0 ? <div className="mt-6"><p className="text-sm font-bold">Available times</p><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">{slots.map((slot) => <button aria-pressed={selectedStartAt === slot.startAt} className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition ${selectedStartAt === slot.startAt ? "border-sage bg-sage text-cream" : "border-ink/20 bg-paper hover:border-clay hover:text-clay"}`} key={slot.startAt} onClick={() => setSelectedStartAt(slot.startAt)} type="button">{slot.localTimeLabel}<span className="sr-only">{selectedStartAt === slot.startAt ? " selected" : ""}</span></button>)}</div></div> : null}{selectedStartAt ? <div className="mt-6 border-t border-ink/10 pt-5"><p className="public-eyebrow">Review the change</p><div className="mt-3 grid gap-3 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center"><p><span className="block text-ink/50">Current</span><strong>{studioDate(booking.startAt, booking.timezone)}<br />{studioTime(booking.startAt, booking.timezone)}</strong></p><span className="hidden text-2xl text-clay sm:block" aria-hidden="true">→</span><p><span className="block text-ink/50">New</span><strong>{studioDate(selectedStartAt, booking.timezone)}<br />{studioTime(selectedStartAt, booking.timezone)}</strong></p></div><div className="mt-5 flex flex-wrap gap-3"><button className="public-button-primary" disabled={pending} onClick={confirmReschedule} type="button">{pending ? "Rescheduling…" : "Confirm reschedule"}</button><button className="public-button-secondary" onClick={() => setMode(null)} type="button">Keep current time</button></div></div> : null}</section> : null}
             <div className="mt-8 flex flex-wrap gap-3">
-              {booking.canReschedule && !mode ? <button className="min-h-12 rounded-full bg-sage px-7 font-semibold text-cream" onClick={() => setMode("reschedule")} type="button">Reschedule</button> : null}
-              {booking.canCancel && !mode ? <button className="min-h-12 rounded-full border border-clay px-7 font-semibold text-clay" onClick={() => setMode("cancel")} type="button">Cancel booking</button> : null}
+              {booking.canReschedule && !mode ? <button className="public-button-primary" onClick={() => setMode("reschedule")} type="button">Reschedule</button> : null}
+              {booking.canCancel && !mode ? <button className="public-button-secondary border-clay/60 text-clay" onClick={() => setMode("cancel")} type="button">Cancel booking</button> : null}
               {!booking.canCancel && !booking.canReschedule && (booking.status === "PENDING" || booking.status === "CONFIRMED") ? <p className="w-full text-sm text-ink/55">Online changes are no longer available because the policy cutoff has passed.</p> : null}
               <button
-                className="min-h-12 rounded-full bg-ink px-7 font-semibold text-cream"
+                className="public-button-secondary"
                 onClick={resetLookup}
                 type="button"
               >
                 Look up another booking
               </button>
               <Link
-                className="inline-flex min-h-12 items-center rounded-full border border-ink/20 px-7 font-semibold"
+                className="public-button-quiet"
                 href="/services"
               >
                 View services
@@ -233,9 +233,9 @@ export function ManageBooking() {
   }
 
   return (
-    <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 sm:px-10 sm:py-20 lg:grid-cols-[1fr_0.72fr]">
+    <section className="public-container grid max-w-6xl gap-10 py-14 sm:py-20 lg:grid-cols-[1fr_0.72fr]">
       <form
-        className="rounded-[2rem] border border-ink/10 bg-white/65 p-6 shadow-xl shadow-ink/5 sm:p-9"
+        className="public-surface min-w-0 p-6 sm:p-9"
         noValidate
         onSubmit={submitLookup}
       >
@@ -247,7 +247,7 @@ export function ManageBooking() {
         {error ? (
           <p
             aria-live="polite"
-            className="mt-6 rounded-xl bg-clay/10 p-4 text-sm font-semibold text-clay"
+            className="public-alert-error mt-6"
             role="alert"
           >
             {error}
@@ -261,7 +261,7 @@ export function ManageBooking() {
               aria-describedby={fieldErrors.reference ? "reference-error" : undefined}
               aria-invalid={Boolean(fieldErrors.reference)}
               autoComplete="off"
-              className="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 font-mono uppercase"
+              className="public-field mt-2 font-mono uppercase"
               id="booking-reference"
               maxLength={32}
               onChange={(event) => {
@@ -285,7 +285,7 @@ export function ManageBooking() {
               aria-describedby={fieldErrors.email ? "email-error" : undefined}
               aria-invalid={Boolean(fieldErrors.email)}
               autoComplete="email"
-              className="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4"
+              className="public-field mt-2"
               id="booking-email"
               maxLength={320}
               onChange={(event) => {
@@ -305,7 +305,7 @@ export function ManageBooking() {
         </div>
 
         <button
-          className="mt-8 min-h-12 w-full rounded-full bg-ink px-7 font-semibold text-cream disabled:cursor-wait disabled:opacity-60"
+          className="public-button-primary mt-8 w-full"
           disabled={pending}
           type="submit"
         >
@@ -313,7 +313,7 @@ export function ManageBooking() {
         </button>
       </form>
 
-      <aside className="h-fit rounded-[2rem] bg-sage p-7 text-cream sm:p-9">
+      <aside className="public-grid-texture h-fit overflow-hidden rounded-[1.5rem] bg-sage p-7 text-cream sm:p-9">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/70">
           Private by design
         </p>

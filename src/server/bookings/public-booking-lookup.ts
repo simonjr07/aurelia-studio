@@ -36,13 +36,23 @@ export type PublicBookingDetail = {
   priceCents: number;
   currency: string;
   customerName: string;
+  serviceSlug: string;
+  staffId: string;
+  cancellationCutoffMinutes: number;
+  rescheduleCutoffMinutes: number;
+  canCancel: boolean;
+  canReschedule: boolean;
+  cancellationCutoffAt: string;
+  rescheduleCutoffAt: string;
 };
 
 export async function verifyPublicBooking(
   candidate: unknown,
+  now = new Date(),
 ): Promise<PublicBookingDetail> {
   const input = publicBookingLookupSchema.parse(candidate);
-  const booking = await getPrismaClient().booking.findFirst({
+  const prisma = getPrismaClient();
+  const [booking, settings] = await Promise.all([prisma.booking.findFirst({
     where: {
       publicReference: input.reference,
       customerEmail: input.email,
@@ -58,14 +68,18 @@ export async function verifyPublicBooking(
       serviceDurationSnapshot: true,
       priceCentsSnapshot: true,
       currencySnapshot: true,
-      staff: { select: { name: true } },
+      staff: { select: { id: true, name: true } },
+      service: { select: { slug: true } },
     },
-  });
+  }), prisma.businessSettings.findUnique({ where: { id: "default" }, select: { cancellationCutoffMinutes: true, rescheduleCutoffMinutes: true } })]);
 
-  if (!booking) {
+  if (!booking || !settings) {
     throw new PublicBookingVerificationError();
   }
 
+  const mutable = booking.status === "PENDING" || booking.status === "CONFIRMED";
+  const cancellationCutoffAt = new Date(booking.startAt.getTime() - settings.cancellationCutoffMinutes * 60_000);
+  const rescheduleCutoffAt = new Date(booking.startAt.getTime() - settings.rescheduleCutoffMinutes * 60_000);
   return {
     reference: booking.publicReference,
     status: booking.status,
@@ -79,6 +93,13 @@ export async function verifyPublicBooking(
     priceCents: booking.priceCentsSnapshot,
     currency: booking.currencySnapshot,
     customerName: booking.customerName,
+    serviceSlug: booking.service.slug,
+    staffId: booking.staff.id,
+    ...settings,
+    canCancel: mutable && now <= cancellationCutoffAt,
+    canReschedule: mutable && now <= rescheduleCutoffAt,
+    cancellationCutoffAt: cancellationCutoffAt.toISOString(),
+    rescheduleCutoffAt: rescheduleCutoffAt.toISOString(),
   };
 }
 

@@ -56,6 +56,8 @@ export type GetServiceAvailabilityInput = {
   date: string;
   staffId?: string;
   now?: Date;
+  excludeBookingId?: string;
+  durationMinutesOverride?: number;
 };
 
 export type ServiceAvailability = {
@@ -88,6 +90,8 @@ export async function getServiceAvailabilityWithDatabase(
   date,
   staffId,
   now = new Date(),
+  excludeBookingId,
+  durationMinutesOverride,
   }: GetServiceAvailabilityInput,
 ): Promise<ServiceAvailability> {
   const [settings, service] = await Promise.all([
@@ -124,6 +128,7 @@ export async function getServiceAvailabilityWithDatabase(
   }
 
   const allEligibleStaff = service.staffServices.map(({ staff }) => staff);
+  const durationMinutes = durationMinutesOverride ?? service.durationMinutes;
   const eligibleStaff = staffId
     ? allEligibleStaff.filter((staff) => staff.id === staffId)
     : allEligibleStaff;
@@ -145,7 +150,7 @@ export async function getServiceAvailabilityWithDatabase(
         id: service.id,
         slug: service.slug,
         name: service.name,
-        durationMinutes: service.durationMinutes,
+        durationMinutes,
       },
       slots: [],
     };
@@ -168,6 +173,7 @@ export async function getServiceAvailabilityWithDatabase(
     }),
     prisma.booking.findMany({
       where: {
+        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
         staffId: { in: staffIds },
         status: { in: [...BLOCKING_BOOKING_STATUSES] },
         startAt: { lt: dayEnd.toJSDate() },
@@ -199,7 +205,7 @@ export async function getServiceAvailabilityWithDatabase(
       date,
       timezone: settings.timezone,
       windows: staffRules,
-      durationMinutes: service.durationMinutes,
+      durationMinutes,
       slotIntervalMinutes: settings.slotIntervalMinutes,
       now,
       bookingLeadMinutes: settings.bookingLeadMinutes,
@@ -230,7 +236,7 @@ export async function getServiceAvailabilityWithDatabase(
       id: service.id,
       slug: service.slug,
       name: service.name,
-      durationMinutes: service.durationMinutes,
+      durationMinutes,
     },
     slots: [...slotsByStart.values()]
       .sort((left, right) => left.startAt.getTime() - right.startAt.getTime())

@@ -27,7 +27,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible-staff projection, and development catalogue bootstrap policy.
 - **Availability (`src/server/availability`):** pure wall-clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity-blocking bookings to the domain core.
 - **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database-conflict translation.
-- **Public booking lookup (`src/server/bookings`):** strict reference/email verification, shared persistent abuse controls, snapshot-backed safe projection, and generic anti-enumeration outcomes.
+- **Public booking management (`src/server/bookings`):** strict reference/email verification, separate persistent abuse controls, snapshot-backed safe projection, generic anti-enumeration outcomes, cutoff-aware cancellation, and transactional rescheduling.
 - **Appointment operations (`src/server/appointments`):** role-scoped queries, studio-local day boundaries, centralized state machine, conditional transactional status writes, and audit creation.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
@@ -79,9 +79,17 @@ The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLea
 
 ## Public booking management
 
-`/manage-booking` keeps credentials in transient client state and sends them only in a POST body. The lookup service normalizes email and performs one constant-shaped query matching both reference and email. A match is mapped to an allow-listed DTO using booking snapshots; nonmatches become one generic domain error. The page clears submitted credentials after success, retains only the safe DTO, stores nothing in browser persistence, is marked `noindex`, and exposes no mutation controls.
+`/manage-booking` keeps credentials in transient client state and sends them only in POST bodies. The lookup service normalizes email and performs one constant-shaped query matching both reference and email. A match is mapped to an allow-listed DTO using booking snapshots; nonmatches become one generic domain error. The page clears the visible credentials after success, keeps the verified email only in memory for the active page, stores nothing in browser persistence, is marked `noindex`, and exposes only currently eligible change controls.
 
 Lookup throttling reuses the shared fixed-window/HMAC primitive. PostgreSQL stores separate `PUBLIC_BOOKING_LOOKUP` counters for reference, normalized email, and available network identity at ten attempts per 15 minutes. Any exhausted dimension blocks the request.
+
+## Cancellation and rescheduling
+
+Every public change re-verifies the opaque reference and normalized booking email. Customer cancellation and rescheduling are limited to `PENDING` or `CONFIRMED` bookings and read their respective cutoff minutes from `BusinessSettings`; an action exactly at the cutoff instant is allowed. Cancellation conditionally changes status and appends a public `BookingStatusEvent`. Rescheduling updates the same booking row, preserving reference, status, and booking snapshots, and appends an immutable `BookingRescheduleEvent` describing the old/new staff and interval.
+
+Rescheduling runs the TASK-005 availability service again inside the database transaction, excludes the current booking from capacity reads, and uses its snapshotted duration. A stale expected status/start becomes a conflict. PostgreSQL's active-booking GiST exclusion constraint remains authoritative if concurrent work races after advisory revalidation.
+
+Internal cancellation continues through the TASK-008 status transition and therefore does not apply customer cutoffs. Internal rescheduling requires an active actor: staff can move only their own appointment and keep themselves assigned, while administrators may move any in-scope booking to any currently eligible professional. The reschedule event records the authenticated actor and optional internal note.
 
 ## Staff appointment operations
 

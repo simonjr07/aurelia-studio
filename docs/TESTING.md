@@ -52,6 +52,10 @@ TASK-010 adds wall-clock/DST unit coverage and live PostgreSQL schedule-manageme
 
 The complete TASK-010 suite contains 127 passing tests across 25 files with every PostgreSQL integration suite active.
 
+TASK-011 adds limiter unit coverage and live PostgreSQL booking-change coverage. It verifies `PENDING`/`CONFIRMED` cancellation, equality-at-cutoff versus inside-cutoff rejection, generic verification failures, same-row/reference/status/snapshot rescheduling, immutable audit facts, released/moved capacity, deterministic Any available assignment, stale and terminal conflicts, STAFF own/self scope, ADMIN eligible-staff selection, and concurrent cancel/reschedule coherence. Existing login and booking-creation limiter tests remain unchanged and passing, proving the new action buckets are isolated.
+
+The complete TASK-011 suite contains 136 passing tests across 27 files with every PostgreSQL integration suite active.
+
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
@@ -62,7 +66,9 @@ Availability QA uses a deterministic fixed clock in tests and checks `/api/avail
 
 Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bootstrap:booking-demo`. Verify specific and any-professional paths, date/time reloads, contact field errors, review, pending confirmation/reference, persisted booking/event, disappearance of the occupied slot, keyboard focus, mobile layout, pending-button lockout, and friendly stale-slot recovery. Demo bootstrap data is development-only and must never target production.
 
-Public lookup QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio-local time display correctly, the URL remains credential-free after lookup/reload, response headers prohibit storage, and no cancel/reschedule controls appear.
+Public management QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio-local time display correctly, and the URL remains credential-free. Check that eligible actions reflect the configured cutoff, equality is accepted, cancellation removes capacity, rescheduling keeps the reference/status/snapshots while moving capacity, stale submissions are safe, terminal bookings expose no actions, and response headers prohibit storage.
+
+Authenticated appointment QA also checks rescheduling: STAFF can move only their own appointment and remains assigned to themselves; ADMIN can move any visible appointment to a currently eligible professional. Internal cancellation continues through the status workflow and internal changes are not subject to customer cutoffs. Confirm actor/note reschedule history renders chronologically.
 
 Appointment workflow QA can use `db:bootstrap:appointment-workflow` after supplying three local passwords through the shell. Check admin-wide and staff-owned views, direct cross-staff denial, valid status changes, terminal actions, audit actor/note display, logout, and disabled-user denial. The command is create-only and production-blocked.
 

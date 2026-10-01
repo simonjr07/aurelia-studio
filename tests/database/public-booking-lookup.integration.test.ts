@@ -117,7 +117,7 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
       email: `  ${customerEmail.toUpperCase()}  `,
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       reference: references.PENDING,
       status: "PENDING",
       statusLabel: "Pending",
@@ -130,15 +130,31 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
       priceCents: 22_500,
       currency: "USD",
       customerName: "Lookup Guest",
+      serviceSlug: expect.any(String),
+      staffId,
+      cancellationCutoffMinutes: 120,
+      rescheduleCutoffMinutes: 240,
+      canCancel: true,
+      canReschedule: true,
+      cancellationCutoffAt: expect.any(String),
+      rescheduleCutoffAt: expect.any(String),
     });
     expect(Object.keys(result).sort()).toEqual(
       [
         "currency",
+        "canCancel",
+        "canReschedule",
+        "cancellationCutoffAt",
+        "cancellationCutoffMinutes",
         "customerName",
         "durationMinutes",
         "endAt",
         "priceCents",
         "reference",
+        "rescheduleCutoffAt",
+        "rescheduleCutoffMinutes",
+        "serviceSlug",
+        "staffId",
         "serviceName",
         "staffName",
         "startAt",
@@ -147,7 +163,6 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
         "timezone",
       ].sort(),
     );
-    expect(JSON.stringify(result)).not.toContain(staffId);
     expect(JSON.stringify(result)).not.toContain(customerEmail);
     expect(JSON.stringify(result)).not.toContain("Private customer note");
     expect(JSON.stringify(result)).not.toContain("Changed Live Service Name");

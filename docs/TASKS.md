@@ -76,6 +76,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** apply customer and staff change policies safely.
 - **Deliverables:** cutoff rules, transactional rescheduling/cancellation, audit history, notifications placeholder boundary.
 - **Acceptance:** rescheduling enforces the overlap invariant and stale-state handling; cancellation/reschedule policies are tested.
+- **Status:** implementation complete; verified public cancellation/rescheduling, setting-derived equality-inclusive cutoffs, same-booking immutable reschedule history, role-scoped internal rescheduling, separate HMAC throttles, transactional availability revalidation, PostgreSQL overlap authority, and live concurrency tests are included.
 
 ## TASK-012 — Dashboard analytics
 

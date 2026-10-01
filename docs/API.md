@@ -8,6 +8,8 @@ TASK-009 adds administrator-only `POST /api/admin/services`, `PATCH /api/admin/s
 
 TASK-010 adds authenticated `POST /api/admin/availability`, `DELETE /api/admin/availability/[id]`, `POST /api/admin/blocked-times`, and `DELETE /api/admin/blocked-times/[id]`. ADMIN may target any STAFF account; STAFF may target only themselves. Cross-scope or missing resources return `404`, validation returns `400`, overlaps/disabled targets return `409`, missing studio configuration returns `503`, and unexpected errors remain generic. Responses expose only schedule identifiers and never blocked reasons beyond the authorized internal page.
 
+TASK-011 adds verified `POST /api/bookings/cancel`, `POST /api/bookings/reschedule`, and authenticated `POST /api/admin/appointments/[id]/reschedule`. Public changes require reference plus normalized email on every request. Validation is `400`, generic verification/missing scope is `404`, stale state or occupied capacity is `409`, cutoff/state policy is `422`, throttling is `429`, and unexpected failures are generic `500` responses.
+
 ## Interface choice
 
 - Use **Server Actions** for first-party form mutations tightly coupled to App Router views.
@@ -22,10 +24,8 @@ TASK-010 adds authenticated `POST /api/admin/availability`, `DELETE /api/admin/a
 | Query availability | `GET /api/availability` | One date; validated; dynamic; advisory |
 | Create booking | `POST /api/bookings` | Implemented: revalidates and enforces conflict atomically |
 | Retrieve public booking | `POST /api/bookings/lookup` | Implemented: reference plus normalized email; rate limited |
-| Reschedule/cancel | Server Action or scoped route | Policy, verification, audit, transaction |
+| Reschedule/cancel | `POST /api/bookings/reschedule` and `/api/bookings/cancel` | Implemented: verification, policy, audit, transaction |
 | Staff/admin operations | Authenticated Route Handlers | Implemented for appointments and service/staff management |
-
-Final paths will be documented when implemented rather than treated as stable now.
 
 ## Implemented public service interface
 
@@ -51,7 +51,15 @@ Known outcomes are `400` with field errors, `404` for an unavailable service, `4
 
 `POST /api/bookings/lookup` accepts only `{ reference, email }`. The strict schema requires the exact `AUR-` reference pattern, bounds both fields, and normalizes email consistently with booking creation. Verification uses one query containing both values; unknown references and wrong emails receive the same `404` body. Malformed input returns `400`, the eleventh attempt within a fixed 15-minute identity window returns `429`, and internal failures return a generic `500`.
 
-The `200` DTO contains reference, enum/friendly status, booking snapshot service facts, current booked-professional name, start/end instants, snapshot timezone, and customer name. It excludes internal ids, contact details, notes, event data, staff account data, and rate-limit metadata. Every response sends `Cache-Control: private, no-store, max-age=0` and `Pragma: no-cache`.
+The `200` DTO contains reference, enum/friendly status, booking snapshot service facts, current booked-professional identity/name, start/end instants, snapshot timezone, customer name, configured cutoff facts, and whether each public change is currently allowed. It excludes contact details, notes, event data, staff account-private data, and rate-limit metadata. Every response sends `Cache-Control: private, no-store, max-age=0` and `Pragma: no-cache`.
+
+## Implemented booking change interfaces
+
+`POST /api/bookings/cancel` accepts `{ reference, email, expectedStatus, expectedStartAt }`. It re-verifies the customer, re-reads current state in a transaction, applies the configured cancellation cutoff, conditionally changes the status to `CANCELLED`, and appends an actorless status event.
+
+`POST /api/bookings/reschedule` accepts the same verification and stale-state fields plus `{ startAt, staffId? }`. It applies the configured reschedule cutoff, re-runs availability using the booking's snapshot duration while excluding the booking itself, updates that same booking row, and appends an actorless reschedule event. Omitting `staffId` uses deterministic Any available selection.
+
+`POST /api/admin/appointments/[id]/reschedule` accepts `{ expectedStatus, expectedStartAt, startAt, staffId?, note? }`. It re-resolves the active actor. STAFF is own-booking/self-target only; ADMIN may operate across eligible staff. Customer cutoffs do not apply to authenticated operations, and the event records the actor and optional note. All change responses are non-cacheable and expose narrow booking facts only.
 
 ## Implemented authentication interfaces
 

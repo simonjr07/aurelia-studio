@@ -32,6 +32,8 @@
 - Public booking input is a strict allow-list; price, duration, end time, snapshots, status, and availability are always re-derived inside the transaction.
 - Booking throttling permits five attempts per 15-minute window for both normalized email and available network identity. Only HMAC-SHA256 keys are persisted, and failures do not disclose prior bookings.
 - Lookup throttling permits ten attempts per 15-minute window for reference, normalized email, and available network identity. No plaintext lookup identity is persisted.
+- Public cancellation and rescheduling re-verify reference plus normalized email on every request and deliberately share the lookup's generic unknown/wrong-email response. Each action has its own five-attempt, 15-minute HMAC buckets for reference, email, and available network identity; those counters cannot affect login or booking creation.
+- Customer change cutoffs and expected state/start are rechecked inside the transaction. A reschedule never trusts a client duration, end time, staff eligibility, or availability result; it excludes only the current booking before PostgreSQL enforces final overlap safety.
 
 ## PII and information exposure
 

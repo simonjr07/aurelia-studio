@@ -12,6 +12,7 @@
 - Service/staff management pages call `requireAdmin()`, and every management API plus server-only mutation independently asserts ADMIN. Staff links being hidden is only presentation.
 - Ordinary management can create and edit STAFF only; role is forced server-side and ADMIN identities are outside the editable query boundary. Disablement takes effect through the existing database-backed current-user recheck.
 - Schedule mutations re-resolve an active actor and authorize the target resource server-side: ADMIN may manage STAFF accounts, while STAFF may use only their own id. Cross-staff reads/deletes are hidden as not found, and disabled targets cannot receive new entries.
+- Analytics navigation is ADMIN-only, and both the `/admin/analytics` page and its server-only query service independently assert an active ADMIN before reading aggregates. No public or STAFF analytics endpoint exists.
 
 ## Input and mutation safety
 
@@ -44,6 +45,7 @@
 - Define retention and deletion policy before production. Backups inherit the same sensitivity.
 - Avoid placing PII or secrets in URLs, cache keys, client telemetry, test fixtures, screenshots, or commit history.
 - Verified booking responses are private/no-store, and `/manage-booking` is `noindex`. The browser clears verification credentials after success and does not persist them.
+- Analytics DTOs are aggregate allow-lists: they exclude customer names, emails, phones, notes, booking references, rate-limit buckets, and revenue-like values. Raw database errors are not rendered. Date inputs are strictly validated and bounded to 365 inclusive days; raw SQL uses Prisma parameterization. The page is dynamically rendered with revalidation disabled so operational data cannot leak through a shared public cache.
 
 ## Secrets and environment
 

@@ -19,6 +19,7 @@ const navigationItems: Array<{
   { label: "Services", href: "/admin/services", roles: ["ADMIN"] },
   { label: "Staff", href: "/admin/staff", roles: ["ADMIN"] },
   { label: "Availability", href: "/admin/availability", roles: ["STAFF", "ADMIN"] },
+  { label: "Analytics", href: "/admin/analytics", roles: ["ADMIN"] },
 ];
 
 export function WorkspaceNavigation({ role }: { role: Role }) {

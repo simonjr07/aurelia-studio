@@ -25,6 +25,25 @@ Screenshots will be captured after each represented feature is implemented and v
 - Record the build/commit and viewport used so images can be reproduced.
 - Remove outdated images when UI behavior materially changes.
 
-## Current state
+## Curated capture list
 
-The TASK-001 homepage is a foundation placeholder. Final portfolio screenshots wait until the relevant flows are implemented; no mock screen should be presented as shipped functionality.
+When a verified hosted environment is available, capture these portfolio views with fictional data only:
+
+1. `01-home-desktop.png` — homepage at 1440px
+2. `02-services.png` — public catalogue
+3. `03-service-detail.png` — service detail
+4. `04-booking-flow.png` — professional/date/time selection
+5. `05-booking-confirmation.png` — confirmation without contact details
+6. `06-manage-booking.png` — verified booking view without credentials
+7. `07-admin-overview.png` — administrator overview
+8. `08-appointment-detail.png` — appointment workflow/audit view
+9. `09-service-management.png` — catalogue management
+10. `10-availability-management.png` — recurring/blocked-time management
+11. `11-analytics.png` — aggregate analytics
+12. `12-home-mobile.png` — homepage at approximately 390px
+
+Optional staff-management and mobile-admin views may be added only when they meet the same standard. Record the real deployed commit and viewport alongside the capture set; embed only a small best-of selection in the README.
+
+## Current status
+
+No screenshots have been captured or added under `docs/screenshots/`. Hosted account access and a verified deployment were unavailable during Task #15 preparation, so this is an honest capture checklist rather than fabricated portfolio evidence.

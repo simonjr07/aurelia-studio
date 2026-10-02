@@ -85,3 +85,7 @@ Residual risks intentionally outside V1 include no MFA, password reset, CAPTCHA,
 ### Dependency audit (2026-10-02)
 
 `npm audit` reported six findings: two moderate Vitest/@vitest-mocker findings in test tooling and four high findings through Prisma CLI's optional MySQL-related dependency chain (`@prisma/config` → `deepmerge-ts` and `mysql2`). The application uses PostgreSQL through `pg`, not MySQL, and Vitest is not shipped with the application runtime. The offered remediation downgrades Prisma to a breaking major version and upgrades Vitest across a breaking major version, so no automatic fix was applied in this hardening pass. Reassess after Prisma and Vitest publish compatible non-vulnerable updates; do not use `npm audit fix --force` blindly.
+
+## Hosted verification status
+
+No hosted security evidence is claimed yet. Before launch, verify the deployed production hostname—not merely a preview—for CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, framing protection, absence of `X-Powered-By`, no-store booking responses, and noindex private routes. Review Vercel logs and Supabase connection behavior without copying secrets, tokens, customer data, or connection strings into the repository.

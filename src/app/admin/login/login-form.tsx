@@ -17,7 +17,7 @@ export function LoginForm() {
         </label>
         <input
           autoComplete="email"
-          className="min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base outline-none transition focus:border-clay focus:ring-4 focus:ring-clay/10"
+          className="admin-field min-h-12 px-4 text-base"
           id="email"
           maxLength={320}
           name="email"
@@ -32,7 +32,7 @@ export function LoginForm() {
         </label>
         <input
           autoComplete="current-password"
-          className="min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base outline-none transition focus:border-clay focus:ring-4 focus:ring-clay/10"
+          className="admin-field min-h-12 px-4 text-base"
           id="password"
           maxLength={128}
           name="password"
@@ -52,7 +52,7 @@ export function LoginForm() {
       ) : null}
 
       <button
-        className="min-h-12 w-full rounded-full bg-ink px-6 text-sm font-semibold text-cream transition hover:bg-ink/90 disabled:cursor-wait disabled:opacity-60"
+        className="admin-button-primary min-h-12 w-full"
         disabled={pending}
         type="submit"
       >

@@ -22,12 +22,12 @@ export function StaffCreateForm() {
     } catch { setMessage("The staff account could not be created."); }
     finally { setPending(false); }
   }
-  const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-ink/20 px-4 focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/25";
-  return <form className="mt-8 space-y-6 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9" onSubmit={submit}>
+  const inputClass = "admin-field mt-2 px-4";
+  return <form className="admin-surface mt-8 space-y-6 p-6 sm:p-9" onSubmit={submit}>
     <label className="block font-semibold">Name<input className={inputClass} maxLength={120} name="name" required /></label>
     <label className="block font-semibold">Email<input autoComplete="email" className={inputClass} maxLength={320} name="email" required type="email" /></label>
     <label className="block font-semibold">Temporary password<input autoComplete="new-password" className={inputClass} minLength={12} name="password" required type="password" /><span className="mt-2 block text-sm font-normal text-ink/50">At least 12 characters. Share it securely; it is never shown again.</span></label>
-    <button className="min-h-11 rounded-full bg-ink px-6 font-semibold text-cream disabled:opacity-50" disabled={pending}>{pending ? "Creating…" : "Create staff account"}</button><p aria-live="polite" className="text-sm font-semibold text-clay">{message}</p>
+    <button className="admin-button-primary" disabled={pending}>{pending ? "Creating…" : "Create staff account"}</button><p aria-live="polite" className="text-sm font-semibold text-clay">{message}</p>
   </form>;
 }
 

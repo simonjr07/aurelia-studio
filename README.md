@@ -17,7 +17,7 @@ Appointment scheduling is deceptively complex: customers need a clear booking jo
 - Timezone-aware scheduling with transactional checks and PostgreSQL conflict authority
 - Responsive, accessible public and internal interfaces
 
-The project currently includes the **Task 011.5 public experience refresh** and **Task 012 dashboard analytics workflow**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow, plus privacy-conscious operational analytics for administrators.
+The project currently includes the **Task 011.5 public experience refresh**, **Task 012 dashboard analytics workflow**, and **Task 013 frontend polish**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow, plus privacy-conscious operational analytics and a refined accessible internal workspace.
 
 The public interface uses a restrained ivory, charcoal, sage, and clay palette; an editorial display face paired with a readable interface sans; shared controls and surface styles; responsive navigation; explicit selected/loading/empty/error states; and reduced-motion-aware transitions. This presentation layer does not alter booking policies, API contracts, authentication, or persistence behavior.
 

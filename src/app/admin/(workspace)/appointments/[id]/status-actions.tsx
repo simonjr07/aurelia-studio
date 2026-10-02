@@ -64,7 +64,7 @@ export function StatusActions({
         Internal status note <span className="font-normal text-ink/45">(optional)</span>
       </label>
       <textarea
-        className="mt-2 min-h-24 w-full rounded-xl border border-ink/20 bg-white p-4"
+        className="admin-field mt-2 min-h-24 p-4"
         id="status-note"
         maxLength={1000}
         onChange={(event) => setNote(event.target.value)}
@@ -73,7 +73,7 @@ export function StatusActions({
       <div className="mt-4 flex flex-wrap gap-3">
         {targets.map((target) => (
           <button
-            className={`min-h-11 rounded-full px-5 text-sm font-semibold disabled:opacity-50 ${target === "CANCELLED" ? "border border-clay text-clay" : "bg-ink text-cream"}`}
+            className={target === "CANCELLED" ? "admin-button-danger" : "admin-button-primary"}
             disabled={Boolean(pendingStatus)}
             key={target}
             onClick={() => changeStatus(target)}

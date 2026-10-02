@@ -145,6 +145,10 @@ Filter analytics by booking `startAt`, not `createdAt`, using inclusive studio-l
 
 Expose ADMIN-only booking/status totals, daily volume, service ranking, and staff workload. Workload means non-cancelled appointment count and snapshotted scheduled minutes; it is not utilization because no capacity denominator is calculated. Group services by stable id with historical snapshot names, retain inactive/disabled historical rows, return no customer PII or rate-limit facts, and omit booking value/revenue because no payment source establishes collected revenue. Render dynamically through the Server Component without a public endpoint or long-lived cache.
 
+### ADR-037 — Shared operational UI primitives
+
+Use a small CSS primitive layer for the authenticated workspace: `admin-shell`, `admin-surface`, `admin-field`, button variants, status badges, focus rings, and responsive page spacing. Keep the public `public-*` system intact and avoid a component-library dependency. These primitives standardize interaction states and reduce one-off styling without changing route contracts or business behavior.
+
 ## Human approval required
 
 | Decision | Options / impact |

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getPrismaClient } from "@/server/db/prisma";
+import { getTrustedNetworkIdentity } from "@/server/security/network-identity";
 
 import {
   consumeLoginRateLimit,
@@ -40,17 +41,6 @@ const prismaLoginRateLimitRepository: LoginRateLimitRepository = {
   },
 };
 
-function getNetworkIdentity(request: Request) {
-  const forwardedFor =
-    request.headers.get("x-vercel-forwarded-for") ??
-    request.headers.get("x-forwarded-for") ??
-    request.headers.get("x-real-ip");
-
-  const firstAddress = forwardedFor?.split(",", 1)[0]?.trim();
-
-  return firstAddress ? firstAddress.slice(0, 128) : undefined;
-}
-
 export async function enforceLoginRateLimit(
   emailCandidate: unknown,
   request: Request,
@@ -69,7 +59,7 @@ export async function enforceLoginRateLimit(
 
   return consumeLoginRateLimit({
     accountIdentity,
-    networkIdentity: getNetworkIdentity(request),
+    networkIdentity: getTrustedNetworkIdentity(request),
     secret,
     repository: prismaLoginRateLimitRepository,
   });

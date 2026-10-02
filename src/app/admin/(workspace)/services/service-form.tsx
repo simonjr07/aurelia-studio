@@ -42,9 +42,9 @@ export function ServiceForm({ service }: { service?: ServiceValues }) {
     }
   }
 
-  const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-ink/20 bg-white px-4 focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/25";
+  const inputClass = "admin-field mt-2 px-4";
   return (
-    <form className="mt-8 space-y-6 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9" onSubmit={submit}>
+    <form className="admin-surface mt-8 space-y-6 p-6 sm:p-9" onSubmit={submit}>
       <div className="grid gap-6 sm:grid-cols-2">
         <label className="font-semibold">Name<input className={inputClass} defaultValue={service?.name} maxLength={120} name="name" required /></label>
         <label className="font-semibold">Slug <span className="font-normal text-ink/50">(generated from name if blank)</span><input className={inputClass} defaultValue={service?.slug} maxLength={160} name="slug" /></label>
@@ -60,7 +60,7 @@ export function ServiceForm({ service }: { service?: ServiceValues }) {
         <label className="flex min-h-11 items-center gap-3 font-semibold"><input defaultChecked={service?.isActive ?? true} name="isActive" type="checkbox" /> Active and bookable</label>
       </div>
       <p className="text-sm text-ink/55">Changing a slug changes its public URL. Unpublish or deactivate instead of deleting services with history.</p>
-      <button className="min-h-11 rounded-full bg-ink px-6 font-semibold text-cream disabled:opacity-50" disabled={pending} type="submit">{pending ? "Saving…" : "Save service"}</button>
+      <button className="admin-button-primary" disabled={pending} type="submit">{pending ? "Saving…" : "Save service"}</button>
       <p aria-live="polite" className="text-sm font-semibold text-clay">{message}</p>
     </form>
   );

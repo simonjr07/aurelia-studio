@@ -44,6 +44,14 @@ Provision the first production administrator as a controlled one-off operation a
 - Enable automated backups and test restoration before launch.
 - Monitor failed constraints, slow scheduling queries, connection saturation, and migration health without logging PII.
 
+## Security release checks
+
+Vercel terminates HTTPS; keep HSTS behavior at the platform/domain layer rather than forcing it during local development. The application supplies CSP, anti-framing, MIME, referrer, and permissions headers, and disables `X-Powered-By`. Verify those headers in a preview deployment after any Next.js upgrade.
+
+The runtime rate limiter accepts a network signal only from Vercel's trusted forwarding header. It deliberately ignores generic forwarding headers outside that platform, so application HMAC buckets based on email/reference remain the fallback defense. Configure platform-level WAF/rate controls separately before launch.
+
+Run database migrations from the direct TLS connection in one controlled release job. Application instances use the pooled runtime connection and must never run migrations at startup. Confirm Supabase SSL options and serverless connection caps in the actual project configuration before deployment.
+
 ## Hosted QA checklist
 
 - Public service → availability → booking → lookup journey

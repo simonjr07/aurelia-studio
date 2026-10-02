@@ -61,6 +61,8 @@ TASK-012 adds range-parser unit coverage and live PostgreSQL analytics coverage.
 
 The complete TASK-012 suite contains 145 passing tests across 29 files with every PostgreSQL integration suite active.
 
+TASK-014 adds regression coverage for the production security-header policy and trusted Vercel proxy identity derivation. The complete suite now contains 148 passing tests across 31 files when PostgreSQL is configured. Existing login, booking-creation, lookup, cancellation, and reschedule limiter tests remain in the suite, proving the shared proxy-identity refactor did not change their HMAC bucket policies or action isolation. Manual production QA should inspect headers on a Vercel preview, exercise login/booking/verified-management error paths, verify no private response is cached, and confirm an untrusted forwarding header is not treated as a client identity outside Vercel.
+
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import nextConfig from "./next.config";
+import nextConfig, { createContentSecurityPolicy } from "./next.config";
 
 describe("production response headers", () => {
   it("disables framework disclosure and configures baseline browser protections", async () => {
@@ -17,6 +17,15 @@ describe("production response headers", () => {
     );
     expect(values.get("Content-Security-Policy")).toContain(
       "frame-ancestors 'none'",
+    );
+  });
+
+  it("permits eval only for React development diagnostics", () => {
+    expect(createContentSecurityPolicy("development")).toContain(
+      "'unsafe-eval'",
+    );
+    expect(createContentSecurityPolicy("production")).not.toContain(
+      "'unsafe-eval'",
     );
   });
 });

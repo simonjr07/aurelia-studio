@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+export function createContentSecurityPolicy(
+  nodeEnvironment = process.env.NODE_ENV,
+) {
+  const scriptSources =
+    nodeEnvironment === "production"
+      ? "'self' 'unsafe-inline'"
+      : "'self' 'unsafe-inline' 'unsafe-eval'";
+
+  return `default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src ${scriptSources}; style-src 'self' 'unsafe-inline'`;
+}
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -10,8 +21,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value:
-      "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+    value: createContentSecurityPolicy(),
   },
 ] as const;
 

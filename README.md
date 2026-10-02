@@ -2,6 +2,8 @@
 
 Aurelia Studio is a fictional premium beauty and wellness studio, built as a production-style appointment platform for public booking and role-aware staff operations.
 
+The completed product includes the Task 011.5 public experience refresh, Task 012 dashboard analytics, Task 013 frontend polish, and Task 014 security hardening; Task 015 deployment evidence remains deliberately pending real Vercel and Supabase work.
+
 ## The problem
 
 Appointment scheduling is deceptively complex: customers need a clear booking journey, staff need reliable daily operations, and availability must remain correct through time zones, concurrent requests, cancellations, and reschedules. Aurelia Studio demonstrates a focused solution without inventing revenue or customer-impact claims for a fictional business.

@@ -90,6 +90,8 @@ TASK-011 adds the `PUBLIC_BOOKING_CANCEL` and `PUBLIC_BOOKING_RESCHEDULE` limite
 
 The change transaction re-reads the booking, settings, service eligibility, schedule, blocks, and active bookings. Its availability read excludes the booking being moved, while the GiST exclusion constraint still decides overlapping active intervals under concurrency. Separate HMAC-only rate-limit buckets allow cancellation and rescheduling policy to evolve without altering login, creation, or lookup counters.
 
+TASK-012 adds no schema or migration. Analytics reads existing `Booking`, `Service`, `User`, and `BusinessSettings` data through bounded aggregate queries. The range uses appointment `startAt` and studio-local half-open calendar boundaries. Daily buckets are computed in PostgreSQL with the parameterized configured IANA timezone rather than raw UTC dates. Status totals reflect current `Booking.status`; popular services group by stable service id and display the most recent in-range `serviceNameSnapshot`; staff workload excludes cancelled bookings and sums `durationMinutesSnapshot`. Historical inactive services and disabled staff remain visible, with the current live staff name used because staff names are not snapshotted.
+
 ## Remaining design decisions
 
 Opening-hours storage, pending-hold expiry, notification delivery, retention, and any broader staff resource scope remain later-task decisions in [DECISIONS.md](DECISIONS.md).

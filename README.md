@@ -10,11 +10,7 @@ Aurelia Studio is a fictional premium beauty and wellness studio. This repositor
 - Administrative service, staff, hours, rules, and analytics controls
 - Timezone-aware scheduling with server- and database-enforced conflict protection
 
-<<<<<<< Updated upstream
-The project currently includes the **Task 011.5 public experience refresh**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow. Analytics remains a later task.
-=======
 The project currently includes the **Task 011.5 public experience refresh**, **Task 012 dashboard analytics workflow**, and **Task 013 frontend polish**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow, plus privacy-conscious operational analytics and a refined accessible internal workspace.
->>>>>>> Stashed changes
 
 The public interface uses a restrained ivory, charcoal, sage, and clay palette; an editorial display face paired with a readable interface sans; shared controls and surface styles; responsive navigation; explicit selected/loading/empty/error states; and reduced-motion-aware transitions. This presentation layer does not alter booking policies, API contracts, authentication, or persistence behavior.
 
@@ -73,8 +69,4 @@ Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db
 
 ## Status
 
-<<<<<<< Updated upstream
-Database, public booking and verified customer changes, scoped appointment operations, admin service/staff management, and staff schedule management are implemented. Customer cancellation/rescheduling and internal rescheduling are cutoff-aware, transactional, audited, and protected by PostgreSQL overlap enforcement.
-=======
 Database, the refreshed public experience, verified customer changes, scoped appointment operations, admin service/staff management, staff schedule management, administrator analytics, and the final frontend polish pass are implemented. The shared admin system standardizes surfaces, fields, buttons, status badges, active navigation, responsive spacing, focus treatment, and reduced motion while preserving backend behavior.
->>>>>>> Stashed changes

@@ -25,6 +25,7 @@ Mock external boundaries and clocks, not the scheduling rules under test. Use fa
 - **Status transitions:** valid matrix plus forbidden transitions and repeated requests.
 - **Public booking:** service through confirmation and management lookup, including unavailable/stale slot and rate-limit paths.
 - **Permissions:** staff scope cannot reach admin management or data outside policy; administrators can perform intended actions.
+- **Analytics:** validate bounded studio-local ranges and DST transitions; use real PostgreSQL fixtures for current-status totals, local-day bucketing, service ranking, disabled-staff workload, deterministic ties, authorization, and DTO privacy.
 
 ## Quality gates
 
@@ -56,15 +57,11 @@ TASK-011 adds limiter unit coverage and live PostgreSQL booking-change coverage.
 
 The complete TASK-011 suite contains 136 passing tests across 27 files with every PostgreSQL integration suite active.
 
-<<<<<<< Updated upstream
-=======
 TASK-012 adds range-parser unit coverage and live PostgreSQL analytics coverage. Tests prove the precise default and explicit half-open ranges, malformed/reversed/overlong rejection, 23- and 25-hour DST days, New York local-day grouping near UTC midnight, all current status counts, deterministic service ranking with inactive historical services and snapshot names, disabled-staff workload with cancelled rows excluded, aggregate DTO privacy, and STAFF rejection at the query boundary.
 
 The complete TASK-012 suite contains 145 passing tests across 29 files with every PostgreSQL integration suite active.
 
 TASK-013 applies shared frontend primitives and semantic markup improvements without changing backend contracts. Automated validation remains the existing full suite; review specifically covers role-aware active navigation, labeled controls, text equivalents for analytics bars, disabled/loading action states, empty-state guidance, visible focus, responsive wrapping/overflow safeguards, and `prefers-reduced-motion` handling. Authenticated browser visual QA remains outstanding when the browser automation helper is unavailable.
-
->>>>>>> Stashed changes
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
@@ -78,6 +75,8 @@ Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bo
 Public management QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio-local time display correctly, and the URL remains credential-free. Check that eligible actions reflect the configured cutoff, equality is accepted, cancellation removes capacity, rescheduling keeps the reference/status/snapshots while moving capacity, stale submissions are safe, terminal bookings expose no actions, and response headers prohibit storage.
 
 Authenticated appointment QA also checks rescheduling: STAFF can move only their own appointment and remains assigned to themselves; ADMIN can move any visible appointment to a currently eligible professional. Internal cancellation continues through the status workflow and internal changes are not subject to customer cutoffs. Confirm actor/note reschedule history renders chronologically.
+
+Analytics QA uses development-only or integration fixtures spanning dates, statuses, services, and active/disabled staff. Verify ADMIN navigation and direct access, STAFF denial, the default and alternate ranges, local-day trend, deterministic service order, non-cancelled workload totals, a useful zero-data state, mobile layout, keyboard-visible controls, text equivalents for charts, and the absence of customer PII.
 
 Appointment workflow QA can use `db:bootstrap:appointment-workflow` after supplying three local passwords through the shell. Check admin-wide and staff-owned views, direct cross-staff denial, valid status changes, terminal actions, audit actor/note display, logout, and disabled-user denial. The command is create-only and production-blocked.
 

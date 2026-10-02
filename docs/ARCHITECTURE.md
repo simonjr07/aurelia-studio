@@ -29,6 +29,7 @@ This is a modular monolith: one deployable application with deliberate internal 
 - **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database-conflict translation.
 - **Public booking management (`src/server/bookings`):** strict reference/email verification, separate persistent abuse controls, snapshot-backed safe projection, generic anti-enumeration outcomes, cutoff-aware cancellation, and transactional rescheduling.
 - **Appointment operations (`src/server/appointments`):** role-scoped queries, studio-local day boundaries, centralized state machine, conditional transactional status writes, and audit creation.
+- **Analytics (`src/server/analytics`):** ADMIN-only range parsing and bounded aggregate queries for current-status counts, studio-local booking trends, historical service popularity, and staff workload.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
 
@@ -108,6 +109,12 @@ Assignment replacement verifies the target is a STAFF account and every service 
 `/admin/availability` gives administrators a STAFF-only target list and redirects staff members to their own schedule. Every detail query and mutation rechecks `ADMIN || actor.id === targetStaffId`; cross-staff access uses not-found semantics. Disabled staff remain inspectable and existing entries removable, but new windows and blocks are rejected.
 
 Recurring windows retain local studio wall-clock minutes and use create/delete operations. Block input is resolved through the configured IANA timezone to concrete instants, rejecting nonexistent DST times and choosing the earlier instant during fall-back ambiguity. Serializable transactions reject overlapping half-open windows/blocks and blocks that overlap `PENDING` or `CONFIRMED` bookings. Schedule changes never alter bookings and flow directly into the existing availability engine.
+
+## Dashboard analytics
+
+`/admin/analytics` is a dynamic Server Component protected by `requireAdmin()`. The server-only analytics service repeats the ADMIN assertion beside its database reads. It reads `BusinessSettings.timezone`, converts validated local calendar dates to the half-open UTC interval `[start local midnight, day after end local midnight)`, and filters by appointment `startAt` rather than booking creation time. The default is today plus the previous 29 studio-local days; presets cover 7, 30, and 90 days, while custom ranges are limited to 365 inclusive days.
+
+Prisma `groupBy` supplies current `Booking.status` counts. Parameterized PostgreSQL queries bucket appointments with `startAt AT TIME ZONE <studio timezone>`, rank services by stable id while displaying the most recent in-range snapshot name, and calculate staff workload as non-cancelled appointment count plus snapshotted scheduled minutes. Disabled staff remain in historical results and their current live name is displayed. Queries are bounded, set-based, and return aggregate-only DTOs with no customer PII, booking references, rate-limit data, or financial metrics. The page opts out of static caching and uses lightweight accessible HTML/CSS visualizations instead of a chart dependency.
 
 ## Request and mutation rules
 

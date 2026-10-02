@@ -18,19 +18,19 @@ export default async function AppointmentsPage({
   const { appointments } = await getAppointments(actor, view);
 
   return (
-    <main className="px-6 py-10 sm:px-10 sm:py-14">
+    <main className="admin-main">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-clay">
+        <p className="admin-eyebrow">
           Operations
         </p>
         <h1 className="mt-4 font-display text-5xl tracking-[-0.035em] sm:text-6xl">
           Appointments
         </h1>
-        <div className="mt-8 flex gap-2" role="navigation" aria-label="Appointment views">
+        <div className="mt-7 flex flex-wrap gap-2" role="navigation" aria-label="Appointment views">
           {(["today", "upcoming"] as const).map((item) => (
             <Link
               aria-current={view === item ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold ${view === item ? "bg-ink text-cream" : "border border-ink/15"}`}
+              className={view === item ? "admin-button-primary" : "admin-button-secondary"}
               href={`/admin/appointments?view=${item}`}
               key={item}
             >
@@ -40,15 +40,13 @@ export default async function AppointmentsPage({
         </div>
 
         {appointments.length === 0 ? (
-          <p className="mt-10 rounded-2xl border border-ink/10 bg-white p-7 text-ink/60">
-            No {view} appointments.
-          </p>
+          <div className="admin-surface mt-8 p-8"><p className="admin-eyebrow">Nothing scheduled</p><h2 className="mt-3 font-display text-3xl">No {view} appointments</h2><p className="mt-3 max-w-xl text-sm leading-6 text-ink/60">This is a normal quiet period. New public bookings and schedule changes will appear here automatically.</p></div>
         ) : (
           <ul className="mt-8 space-y-3">
             {appointments.map((appointment) => (
               <li key={appointment.id}>
                 <Link
-                  className="grid gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition hover:border-clay/40 sm:grid-cols-[1.2fr_1fr_auto] sm:items-center"
+                  className="admin-surface grid gap-4 p-4 transition hover:border-clay/40 sm:grid-cols-[1.2fr_1fr_auto] sm:items-center sm:p-5"
                   href={`/admin/appointments/${appointment.id}`}
                 >
                   <div>

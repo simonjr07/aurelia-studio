@@ -216,6 +216,107 @@ textarea {
   background-size: 3rem 3rem;
 }
 
+/* Internal workspace system: denser than the public experience, but still Aurelia. */
+.admin-shell {
+  min-height: 100vh;
+  background: #f4f1eb;
+  color: var(--ink);
+}
+
+.admin-main {
+  width: min(calc(100% - 2rem), 78rem);
+  margin-inline: auto;
+  padding-block: 2.25rem 4rem;
+}
+
+.admin-eyebrow {
+  color: var(--clay);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.admin-surface {
+  border: 1px solid rgb(39 36 31 / 11%);
+  border-radius: 1.35rem;
+  background: var(--paper);
+  box-shadow: 0 1rem 2.5rem rgb(39 36 31 / 4%);
+}
+
+.admin-field {
+  min-height: 2.9rem;
+  width: 100%;
+  border: 1px solid rgb(39 36 31 / 20%);
+  border-radius: 0.7rem;
+  background: var(--paper);
+  padding: 0.65rem 0.8rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.admin-field:hover { border-color: rgb(39 36 31 / 38%); }
+.admin-field:focus { border-color: var(--clay); box-shadow: 0 0 0 3px rgb(159 95 77 / 13%); }
+.admin-field:disabled { cursor: not-allowed; background: var(--stone); opacity: 0.7; }
+
+.admin-button-primary,
+.admin-button-secondary,
+.admin-button-danger {
+  display: inline-flex;
+  min-height: 2.9rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 750;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.admin-button-primary { border: 1px solid var(--ink); background: var(--ink); color: var(--cream); }
+.admin-button-primary:hover { border-color: var(--clay); background: var(--clay); transform: translateY(-1px); }
+.admin-button-secondary { border: 1px solid rgb(39 36 31 / 18%); background: transparent; color: var(--ink); }
+.admin-button-secondary:hover { border-color: var(--clay); color: var(--clay); background: var(--paper); }
+.admin-button-danger { border: 1px solid var(--clay); background: rgb(159 95 77 / 8%); color: #7f4335; }
+.admin-button-danger:hover { background: var(--clay); color: white; }
+.admin-button-primary:disabled,
+.admin-button-secondary:disabled,
+.admin-button-danger:disabled { cursor: wait; opacity: 0.5; transform: none; }
+
+.admin-status {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  border: 1px solid rgb(39 36 31 / 15%);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-status[data-status="PENDING"] { border-color: rgb(169 135 77 / 35%); background: rgb(169 135 77 / 13%); color: #725a2f; }
+.admin-status[data-status="CONFIRMED"] { border-color: rgb(101 112 94 / 35%); background: rgb(101 112 94 / 13%); color: #4c5847; }
+.admin-status[data-status="COMPLETED"] { background: var(--ink); color: var(--cream); }
+.admin-status[data-status="CANCELLED"],
+.admin-status[data-status="DISABLED"] { border-color: rgb(159 95 77 / 30%); background: rgb(159 95 77 / 10%); color: #7f4335; }
+.admin-status[data-status="NO_SHOW"] { background: rgb(39 36 31 / 10%); color: var(--ink); }
+
+.admin-focus-ring:focus-visible,
+.admin-shell a:focus-visible,
+.admin-shell button:focus-visible,
+.admin-shell input:focus-visible,
+.admin-shell select:focus-visible,
+.admin-shell textarea:focus-visible { outline: 2px solid var(--clay); outline-offset: 3px; }
+
+@media (min-width: 640px) {
+  .admin-main { width: min(calc(100% - 5rem), 78rem); padding-block: 3.25rem 5rem; }
+}
+
 @media (min-width: 640px) {
   .public-container {
     width: min(calc(100% - 5rem), 78rem);

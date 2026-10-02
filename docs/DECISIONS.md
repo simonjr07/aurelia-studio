@@ -138,6 +138,10 @@ Run the TASK-005 availability adapter inside the change transaction with the cur
 
 Use a restrained ivory/charcoal foundation with sage, clay, stone, and muted-gold accents. Pair native editorial-serif and clean interface-sans stacks so rendering has no font-download or build-network dependency, keep page structure server-first, and express the brand through typography, spacing, linework, and lightweight CSS composition rather than stock imagery or an animation/icon library. Shared `public-*` design primitives define containers, buttons, fields, surfaces, alerts, focus behavior, and reduced-motion handling. Public refresh work may improve markup and copy but must not change booking rules, API contracts, authentication, or persistence.
 
+### ADR-037 — Shared operational UI primitives
+
+Use a small CSS primitive layer for the authenticated workspace: `admin-shell`, `admin-surface`, `admin-field`, button variants, status badges, focus rings, and responsive page spacing. Keep the public `public-*` system intact and avoid a component-library dependency. These primitives standardize interaction states and reduce one-off styling without changing route contracts or business behavior.
+
 ## Human approval required
 
 | Decision | Options / impact |

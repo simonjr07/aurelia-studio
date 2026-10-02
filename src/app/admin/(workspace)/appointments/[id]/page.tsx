@@ -22,20 +22,20 @@ export default async function AppointmentDetailPage({
   if (!appointment) notFound();
 
   return (
-    <main className="px-6 py-10 sm:px-10 sm:py-14">
+    <main className="admin-main">
       <div className="mx-auto max-w-5xl">
         <Link className="text-sm font-semibold underline underline-offset-4" href="/admin/appointments">
           ← Appointments
         </Link>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-clay">Appointment detail</p>
+            <p className="admin-eyebrow">Appointment detail</p>
             <h1 className="mt-3 font-display text-5xl">{appointment.serviceNameSnapshot}</h1>
           </div>
           <StatusBadge status={appointment.status} />
         </div>
 
-        <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9">
+        <section className="admin-surface mt-8 p-5 sm:p-8">
           <dl className="grid gap-6 sm:grid-cols-2">
             <div><dt className="text-sm text-ink/50">Booking reference</dt><dd className="mt-1 font-mono font-bold">{appointment.publicReference}</dd></div>
             <div><dt className="text-sm text-ink/50">Professional</dt><dd className="mt-1 font-semibold">{appointment.staff.name}</dd></div>
@@ -47,16 +47,16 @@ export default async function AppointmentDetailPage({
           </dl>
         </section>
 
-        {appointment.status === "PENDING" || appointment.status === "CONFIRMED" ? <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9"><h2 className="font-display text-3xl">Reschedule</h2><p className="mt-2 text-sm text-ink/55">Internal rescheduling is not subject to the customer cutoff. Availability is revalidated transactionally.</p><div className="mt-6"><RescheduleActions bookingId={appointment.id} currentStaffId={appointment.staff.id} role={actor.role} serviceSlug={appointment.service.slug} startAt={appointment.startAt.toISOString()} status={appointment.status} /></div></section> : null}
+        {appointment.status === "PENDING" || appointment.status === "CONFIRMED" ? <section className="admin-surface mt-8 p-5 sm:p-8"><h2 className="font-display text-3xl">Reschedule</h2><p className="mt-2 text-sm text-ink/55">Internal rescheduling is not subject to the customer cutoff. Availability is revalidated transactionally.</p><div className="mt-6"><RescheduleActions bookingId={appointment.id} currentStaffId={appointment.staff.id} role={actor.role} serviceSlug={appointment.service.slug} startAt={appointment.startAt.toISOString()} status={appointment.status} /></div></section> : null}
 
-        <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9">
+        <section className="admin-surface mt-8 p-5 sm:p-8">
           <h2 className="font-display text-3xl">Update status</h2>
           <div className="mt-6"><StatusActions bookingId={appointment.id} status={appointment.status} /></div>
         </section>
 
-        <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9"><h2 className="font-display text-3xl">Reschedule history</h2>{appointment.rescheduleEvents.length === 0 ? <p className="mt-4 text-ink/55">No reschedules recorded.</p> : <ol className="mt-6 space-y-5 border-l border-ink/15 pl-6">{appointment.rescheduleEvents.map((event) => <li key={event.id}><p className="font-semibold">{formatAppointmentDateTime(event.fromStartAt, appointment.timezoneSnapshot)} → {formatAppointmentDateTime(event.toStartAt, appointment.timezoneSnapshot)}</p><p className="mt-1 text-sm text-ink/55">Changed {formatAppointmentDateTime(event.createdAt, appointment.timezoneSnapshot)} · {event.changedByUser?.name ?? "Customer / system"}</p>{event.note ? <p className="mt-2 text-sm">{event.note}</p> : null}</li>)}</ol>}</section>
+        <section className="admin-surface mt-8 p-5 sm:p-8"><h2 className="font-display text-3xl">Reschedule history</h2>{appointment.rescheduleEvents.length === 0 ? <p className="mt-4 rounded-xl bg-cream p-4 text-sm text-ink/55">No reschedules recorded.</p> : <ol className="mt-6 space-y-5 border-l border-ink/15 pl-6">{appointment.rescheduleEvents.map((event) => <li key={event.id}><p className="font-semibold">{formatAppointmentDateTime(event.fromStartAt, appointment.timezoneSnapshot)} → {formatAppointmentDateTime(event.toStartAt, appointment.timezoneSnapshot)}</p><p className="mt-1 text-sm text-ink/55">Changed {formatAppointmentDateTime(event.createdAt, appointment.timezoneSnapshot)} · {event.changedByUser?.name ?? "Customer / system"}</p>{event.note ? <p className="mt-2 text-sm">{event.note}</p> : null}</li>)}</ol>}</section>
 
-        <section className="mt-8 rounded-[2rem] border border-ink/10 bg-white p-6 sm:p-9">
+        <section className="admin-surface mt-8 p-5 sm:p-8">
           <h2 className="font-display text-3xl">Status history</h2>
           <ol className="mt-6 space-y-5 border-l border-ink/15 pl-6">
             {appointment.statusEvents.map((event) => (

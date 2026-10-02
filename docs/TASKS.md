@@ -96,6 +96,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** make all flows cohesive and accessible.
 - **Deliverables:** design-system refinements, responsive states, accessibility remediation, purposeful motion.
 - **Acceptance:** key journeys pass keyboard, screen-reader spot, contrast, mobile, and desktop QA.
+- **Status:** implementation complete; the public palette and typography are preserved while the internal shell, active role-aware navigation, overview, appointments, analytics, management forms, availability editor, login, status badges, shared controls, empty states, focus treatment, reduced-motion behavior, and mobile layouts are refined. No backend behavior, schema, API, authorization, or analytics semantics changed. Browser automation was unavailable for this pass, so visual QA evidence is limited to code review and automated validation.
 
 ## TASK-014 — Security and production hardening
 

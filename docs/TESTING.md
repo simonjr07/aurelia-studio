@@ -56,6 +56,15 @@ TASK-011 adds limiter unit coverage and live PostgreSQL booking-change coverage.
 
 The complete TASK-011 suite contains 136 passing tests across 27 files with every PostgreSQL integration suite active.
 
+<<<<<<< Updated upstream
+=======
+TASK-012 adds range-parser unit coverage and live PostgreSQL analytics coverage. Tests prove the precise default and explicit half-open ranges, malformed/reversed/overlong rejection, 23- and 25-hour DST days, New York local-day grouping near UTC midnight, all current status counts, deterministic service ranking with inactive historical services and snapshot names, disabled-staff workload with cancelled rows excluded, aggregate DTO privacy, and STAFF rejection at the query boundary.
+
+The complete TASK-012 suite contains 145 passing tests across 29 files with every PostgreSQL integration suite active.
+
+TASK-013 applies shared frontend primitives and semantic markup improvements without changing backend contracts. Automated validation remains the existing full suite; review specifically covers role-aware active navigation, labeled controls, text equivalents for analytics bars, disabled/loading action states, empty-state guidance, visible focus, responsive wrapping/overflow safeguards, and `prefers-reduced-motion` handling. Authenticated browser visual QA remains outstanding when the browser automation helper is unavailable.
+
+>>>>>>> Stashed changes
 The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half-open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
 
 Manual authentication QA should verify keyboard/paste-friendly sign-in, generic invalid-credential feedback, successful redirect to `/admin`, sign-out, responsive layout, and direct signed-out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.

@@ -6,6 +6,7 @@ import {
   type RateLimitIncrement,
 } from "../auth/rate-limit";
 import { normalizeEmail } from "../auth/validation";
+import { getTrustedNetworkIdentity } from "../security/network-identity";
 
 export const BOOKING_RATE_LIMIT = {
   attempts: 5,
@@ -17,12 +18,7 @@ export type BookingRateLimitRepository = {
 };
 
 export function getRequestNetworkIdentity(request: Request) {
-  const forwardedFor =
-    request.headers.get("x-vercel-forwarded-for") ??
-    request.headers.get("x-forwarded-for") ??
-    request.headers.get("x-real-ip");
-
-  return forwardedFor?.split(",", 1)[0]?.trim().slice(0, 128) || undefined;
+  return getTrustedNetworkIdentity(request);
 }
 
 export async function consumeBookingRateLimit({

@@ -11,6 +11,12 @@ import { availabilityRequestSchema } from "../../../server/availability/request-
 
 export const dynamic = "force-dynamic";
 
+const noStoreHeaders = { "Cache-Control": "no-store" };
+
+function availabilityResponse(body: { error: string }, status: number) {
+  return Response.json(body, { headers: noStoreHeaders, status });
+}
+
 export async function GET(request: NextRequest) {
   const parsed = availabilityRequestSchema.safeParse({
     service: request.nextUrl.searchParams.get("service") ?? undefined,
@@ -19,10 +25,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!parsed.success) {
-    return Response.json(
-      { error: "Invalid availability request." },
-      { status: 400 },
-    );
+    return availabilityResponse({ error: "Invalid availability request." }, 400);
   }
 
   try {
@@ -33,34 +36,31 @@ export async function GET(request: NextRequest) {
     });
 
     return Response.json(availability, {
-      headers: { "Cache-Control": "no-store" },
+      headers: noStoreHeaders,
     });
   } catch (error) {
     if (error instanceof PublicServiceNotFoundError) {
-      return Response.json({ error: "Service not found." }, { status: 404 });
+      return availabilityResponse({ error: "Service not found." }, 404);
     }
 
     if (error instanceof AvailabilityStaffNotEligibleError) {
-      return Response.json({ error: "Staff member not found." }, { status: 404 });
+      return availabilityResponse({ error: "Staff member not found." }, 404);
     }
 
     if (error instanceof InvalidAvailabilityDateError) {
-      return Response.json(
-        { error: "Invalid availability date." },
-        { status: 400 },
-      );
+      return availabilityResponse({ error: "Invalid availability date." }, 400);
     }
 
     if (error instanceof AvailabilityConfigurationError) {
-      return Response.json(
+      return availabilityResponse(
         { error: "Availability is temporarily unavailable." },
-        { status: 500 },
+        500,
       );
     }
 
-    return Response.json(
+    return availabilityResponse(
       { error: "Availability is temporarily unavailable." },
-      { status: 500 },
+      500,
     );
   }
 }

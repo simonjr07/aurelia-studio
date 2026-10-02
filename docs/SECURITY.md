@@ -28,7 +28,7 @@
 - Booking references use a recognizable `AUR-` prefix plus 96 bits from `randomBytes`, encoded as URL-safe base64 without sequential/customer-derived material.
 - Require a second verification factor or signed management token for booking details/changes; do not reveal whether a guessed reference exists.
 - Read-only public lookup requires the exact opaque reference plus normalized booking email in a POST body. Wrong-email and unknown-reference attempts share one response and one query shape.
-- Rate-limit login, availability abuse, booking creation, public lookup, reschedule, and cancellation. Combine coarse IP/network signals with pseudonymous action identifiers where appropriate.
+- Rate-limit login, booking creation, public lookup, reschedule, and cancellation. Combine trusted platform network signals with pseudonymous action identifiers where appropriate.
 - Keep PostgreSQL overlap enforcement as the last line of defense against concurrent double booking.
 - Public booking input is a strict allow-list; price, duration, end time, snapshots, status, and availability are always re-derived inside the transaction.
 - Booking throttling permits five attempts per 15-minute window for both normalized email and available network identity. Only HMAC-SHA256 keys are persisted, and failures do not disclose prior bookings.
@@ -63,3 +63,25 @@ Blocked-time reasons remain internal to authorized schedule pages. Schedule DTOs
 ## Operational hardening
 
 Use HTTPS, secure headers, dependency review, protected branches/CI, migration backups, safe error pages, audit events, and actionable monitoring. Security review includes authorization bypass, ID enumeration, mass assignment, injection, sensitive caching, concurrency, and denial-of-service risks. Suspected incidents should support credential rotation, account disablement, log review, impact assessment, and recovery.
+
+## Task #14 production hardening
+
+The application sends a baseline policy on every response: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a strict cross-origin referrer policy, a restrictive permissions policy, and CSP with same-origin resources, `form-action 'self'`, and `frame-ancestors 'none'`. `X-Powered-By` is disabled. The CSP permits inline scripts and styles because the current Next.js/React rendering path requires them; it does not permit `unsafe-eval`, remote scripts, frames, or plugins. A nonce-based CSP can be evaluated later if the rendering architecture changes.
+
+Rate limits use independent HMAC-SHA256 buckets per action and never persist raw email, reference, or network values. On Vercel, network identity is read only from Vercel's trusted forwarding header. Outside Vercel, client-supplied forwarding headers are intentionally ignored; email/reference buckets remain the effective application-level defense. This is not a substitute for Vercel edge/WAF controls, DDoS protection, or abuse monitoring.
+
+Public verification DTOs are explicit allow-lists. The verified-booking response includes the assigned staff UUID solely to preserve the existing "keep this professional" reschedule flow; it is not sufficient to access or change a booking, and the server re-verifies reference plus normalized email, scopes the booking, and independently validates staff eligibility. It excludes staff email, customer email/phone/note, internal notes, audit data, password/auth data, and limiter data.
+
+All browser mutations use POST or protected server actions; there are no GET mutations. Authenticated browser requests use Auth.js cookies and same-origin application routes, while JSON mutation requests are not CORS-enabled. Login redirects use internal application destinations. React rendering escapes supplied text, and the repository contains no `dangerouslySetInnerHTML` use. Prisma calls are parameterized; analytics raw SQL uses Prisma parameters for values, including its validated timezone.
+
+Sensitive API responses are `no-store`; verified booking management is `noindex`, and operational analytics are dynamically rendered without shared caching. Public marketing pages remain indexable. No file-upload surface exists in V1.
+
+### Deployment and residual risks
+
+Production requires HTTPS, independent `AUTH_SECRET` and `RATE_LIMIT_SECRET` values, a pooled TLS `DATABASE_URL` for runtime traffic, and a direct TLS `DIRECT_URL` for controlled migrations. Use separate preview/production credentials, least-privilege database roles, backups with restoration drills, and one migration runner per release.
+
+Residual risks intentionally outside V1 include no MFA, password reset, CAPTCHA, customer account model, or edge/WAF rate limiting. JWTs have an eight-hour maximum lifetime; protected operations re-check the active user in PostgreSQL so role, disablement, and deletion changes take effect promptly, but an already-issued browser token cannot itself be centrally revoked. This review and its automated checks are not a substitute for hosted browser QA, penetration testing, monitoring, or incident-response exercises.
+
+### Dependency audit (2026-10-02)
+
+`npm audit` reported six findings: two moderate Vitest/@vitest-mocker findings in test tooling and four high findings through Prisma CLI's optional MySQL-related dependency chain (`@prisma/config` → `deepmerge-ts` and `mysql2`). The application uses PostgreSQL through `pg`, not MySQL, and Vitest is not shipped with the application runtime. The offered remediation downgrades Prisma to a breaking major version and upgrades Vitest across a breaking major version, so no automatic fix was applied in this hardening pass. Reassess after Prisma and Vitest publish compatible non-vulnerable updates; do not use `npm audit fix --force` blindly.

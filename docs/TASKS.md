@@ -103,6 +103,7 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** reduce production risk.
 - **Deliverables:** security headers, rate-limit review, logging/redaction, dependency/config audit, backup/recovery and incident notes.
 - **Acceptance:** threat checklist is closed or risk-accepted; authorization regression tests and production build pass.
+- **Status:** implementation complete; trust boundaries, Auth.js/JWT behavior, role/resource scope, explicit public DTOs, HMAC rate-limit isolation, Vercel proxy handling, parameterized analytics, transaction/constraint safety, logs, environment assumptions, deployment controls, safe failure UI, response headers/CSP, caching/indexing, and dependency review are documented and regression-tested. Hosted WAF, penetration testing, and production deployment remain TASK-015 work.
 
 ## TASK-015 — Deployment, hosted QA, and case study
 

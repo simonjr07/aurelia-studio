@@ -111,3 +111,4 @@ Tasks are sequential enough to manage risk but may overlap when their contracts 
 - **Objective:** ship and document a verified hosted release.
 - **Deliverables:** Vercel/Supabase environments, migration process, hosted smoke/accessibility/responsive QA, screenshots, case study.
 - **Acceptance:** production checks pass, rollback/backup paths are recorded, no secrets are committed, and evidence reflects the actual product.
+- **Status:** repository-side runbooks, portfolio README, case study, screenshot plan, and hosted-QA checklist are prepared. Completion is pending actual isolated Supabase/Vercel access, a production deployment from merged `main`, verified hosted evidence, and captured screenshots; no hosted result is represented as complete.

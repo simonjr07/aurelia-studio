@@ -91,3 +91,7 @@ npm run db:deploy
 npm run db:smoke
 npm test
 ```
+
+## Task #15 hosted QA status
+
+Hosted QA is not yet performed. The browser automation helper and hosted provider/account access were unavailable during documentation preparation, so no production URL, screenshots, browser-console result, Vercel log result, connection-pool observation, or responsive/keyboard finding is claimed. Run the deployment runbook and hosted checklist before marking TASK-015 complete.

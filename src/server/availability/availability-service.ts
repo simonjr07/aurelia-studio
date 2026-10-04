@@ -85,6 +85,20 @@ type AvailabilityDatabase = PrismaClient | Prisma.TransactionClient;
 
 export async function getServiceAvailabilityWithDatabase(
   prisma: AvailabilityDatabase,
+  input: GetServiceAvailabilityInput,
+): Promise<ServiceAvailability> {
+  return getServiceAvailabilityWithReadMode(prisma, input, false);
+}
+
+export async function getServiceAvailabilityWithinTransaction(
+  prisma: Prisma.TransactionClient,
+  input: GetServiceAvailabilityInput,
+): Promise<ServiceAvailability> {
+  return getServiceAvailabilityWithReadMode(prisma, input, true);
+}
+
+async function getServiceAvailabilityWithReadMode(
+  prisma: AvailabilityDatabase,
   {
   serviceSlug,
   date,
@@ -93,13 +107,13 @@ export async function getServiceAvailabilityWithDatabase(
   excludeBookingId,
   durationMinutesOverride,
   }: GetServiceAvailabilityInput,
+  sequentialReads: boolean,
 ): Promise<ServiceAvailability> {
-  const [settings, service] = await Promise.all([
-    prisma.businessSettings.findUnique({
+  const settingsQuery = () => prisma.businessSettings.findUnique({
       where: { id: "default" },
       select: { timezone: true, bookingLeadMinutes: true, bookingHorizonDays: true, slotIntervalMinutes: true },
-    }),
-    prisma.service.findFirst({
+    });
+  const serviceQuery = () => prisma.service.findFirst({
       where: { slug: serviceSlug, isPublished: true, isActive: true },
       select: {
         id: true,
@@ -112,8 +126,10 @@ export async function getServiceAvailabilityWithDatabase(
           select: { staff: { select: { id: true, name: true } } },
         },
       },
-    }),
-  ]);
+    });
+  const [settings, service] = sequentialReads
+    ? [await settingsQuery(), await serviceQuery()]
+    : await Promise.all([settingsQuery(), serviceQuery()]);
 
   if (!service) {
     throw new PublicServiceNotFoundError();
@@ -157,21 +173,20 @@ export async function getServiceAvailabilityWithDatabase(
   }
 
   const weekday = weekdayByLuxonWeekday[requestedDate.weekday - 1];
-  const [rules, blockedTimes, bookings] = await Promise.all([
-    prisma.availabilityRule.findMany({
+  const rulesQuery = () => prisma.availabilityRule.findMany({
       where: { staffId: { in: staffIds }, weekday, isActive: true },
       select: { staffId: true, startLocalMinutes: true, endLocalMinutes: true },
       orderBy: [{ staffId: "asc" }, { startLocalMinutes: "asc" }],
-    }),
-    prisma.blockedTime.findMany({
+    });
+  const blockedTimesQuery = () => prisma.blockedTime.findMany({
       where: {
         staffId: { in: staffIds },
         startAt: { lt: dayEnd.toJSDate() },
         endAt: { gt: dayStart.toJSDate() },
       },
       select: { staffId: true, startAt: true, endAt: true },
-    }),
-    prisma.booking.findMany({
+    });
+  const bookingsQuery = () => prisma.booking.findMany({
       where: {
         ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
         staffId: { in: staffIds },
@@ -180,8 +195,10 @@ export async function getServiceAvailabilityWithDatabase(
         endAt: { gt: dayStart.toJSDate() },
       },
       select: { staffId: true, startAt: true, endAt: true },
-    }),
-  ]);
+    });
+  const [rules, blockedTimes, bookings] = sequentialReads
+    ? [await rulesQuery(), await blockedTimesQuery(), await bookingsQuery()]
+    : await Promise.all([rulesQuery(), blockedTimesQuery(), bookingsQuery()]);
 
   const slotsByStart = new Map<
     number,

@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 
 import { Prisma, type BookingStatus, type PrismaClient } from "../../generated/prisma/client";
 import type { CurrentUser } from "../auth/current-user-service";
-import { getServiceAvailabilityWithDatabase } from "../availability/availability-service";
+import { getServiceAvailabilityWithinTransaction } from "../availability/availability-service";
 import { getPrismaClient } from "../db/prisma";
 import { getPublicBookingStatusLabel } from "./public-booking-lookup";
 import { internalRescheduleSchema, publicCancellationSchema, publicRescheduleSchema } from "./change-validation";
@@ -38,10 +38,8 @@ function publicResult(booking: { publicReference: string; status: BookingStatus;
 export async function cancelPublicBooking(candidate: unknown, now = new Date(), database: PrismaClient = getPrismaClient()) {
   const input = publicCancellationSchema.parse(candidate);
   return database.$transaction(async (transaction) => {
-    const [booking, settings] = await Promise.all([
-      transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect }),
-      transaction.businessSettings.findUnique({ where: { id: "default" }, select: { cancellationCutoffMinutes: true } }),
-    ]);
+    const booking = await transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect });
+    const settings = await transaction.businessSettings.findUnique({ where: { id: "default" }, select: { cancellationCutoffMinutes: true } });
     if (!booking) throw new BookingVerificationError();
     if (!mutableStatuses.includes(booking.status)) throw new BookingChangeConflictError("This booking can no longer be cancelled online.");
     if (booking.status !== input.expectedStatus || booking.startAt.getTime() !== new Date(input.expectedStartAt).getTime()) throw new BookingChangeConflictError();
@@ -57,10 +55,8 @@ export async function reschedulePublicBooking(candidate: unknown, now = new Date
   const input = publicRescheduleSchema.parse(candidate);
   try {
     return await database.$transaction(async (transaction) => {
-      const [booking, settings] = await Promise.all([
-        transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect }),
-        transaction.businessSettings.findUnique({ where: { id: "default" }, select: { rescheduleCutoffMinutes: true, timezone: true } }),
-      ]);
+      const booking = await transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect });
+      const settings = await transaction.businessSettings.findUnique({ where: { id: "default" }, select: { rescheduleCutoffMinutes: true, timezone: true } });
       if (!booking) throw new BookingVerificationError();
       if (!mutableStatuses.includes(booking.status)) throw new BookingChangeConflictError("This booking can no longer be rescheduled online.");
       if (booking.status !== input.expectedStatus || booking.startAt.getTime() !== new Date(input.expectedStartAt).getTime()) throw new BookingChangeConflictError();
@@ -68,7 +64,7 @@ export async function reschedulePublicBooking(candidate: unknown, now = new Date
       const requested = new Date(input.startAt);
       const date = DateTime.fromJSDate(requested, { zone: settings.timezone }).toISODate();
       if (!date) throw new BookingChangeConflictError("That time is no longer available. Please choose another slot.");
-      const availability = await getServiceAvailabilityWithDatabase(transaction, { serviceSlug: booking.service.slug, date, staffId: input.staffId, now, excludeBookingId: booking.id, durationMinutesOverride: booking.serviceDurationSnapshot });
+      const availability = await getServiceAvailabilityWithinTransaction(transaction, { serviceSlug: booking.service.slug, date, staffId: input.staffId, now, excludeBookingId: booking.id, durationMinutesOverride: booking.serviceDurationSnapshot });
       const slot = availability.slots.find((item) => new Date(item.startAt).getTime() === requested.getTime());
       if (!slot?.eligibleStaff.length) throw new BookingChangeConflictError("That time is no longer available. Please choose another slot.");
       const selected = [...slot.eligibleStaff].sort((a, b) => a.id.localeCompare(b.id))[0];
@@ -95,7 +91,7 @@ export async function rescheduleInternalBooking(actor: CurrentUser, bookingId: s
       const targetStaffId = actor.role === "STAFF" ? actor.id : input.staffId;
       const requested = new Date(input.startAt); const date = DateTime.fromJSDate(requested, { zone: settings.timezone }).toISODate();
       if (!date) throw new BookingChangeConflictError("That time is no longer available. Please choose another slot.");
-      const availability = await getServiceAvailabilityWithDatabase(transaction, { serviceSlug: booking.service.slug, date, staffId: targetStaffId, now, excludeBookingId: booking.id, durationMinutesOverride: booking.serviceDurationSnapshot });
+      const availability = await getServiceAvailabilityWithinTransaction(transaction, { serviceSlug: booking.service.slug, date, staffId: targetStaffId, now, excludeBookingId: booking.id, durationMinutesOverride: booking.serviceDurationSnapshot });
       const slot = availability.slots.find((item) => new Date(item.startAt).getTime() === requested.getTime());
       if (!slot?.eligibleStaff.length) throw new BookingChangeConflictError("That time is no longer available. Please choose another slot.");
       const selected = [...slot.eligibleStaff].sort((a, b) => a.id.localeCompare(b.id))[0];

@@ -45,7 +45,7 @@ describe.skipIf(!hasDatabaseUrl)("booking cancellation and rescheduling", () => 
     }
   });
 
-  it("rejects terminal, inside-cutoff, wrong-email, and unknown-reference cancellation safely", async () => {
+  it("rejects terminal, inside cutoff, wrong email, and unknown reference cancellation safely", async () => {
     for (const status of ["COMPLETED", "CANCELLED", "NO_SHOW"] as const) { const item = await booking(status, 14 + ["COMPLETED", "CANCELLED", "NO_SHOW"].indexOf(status)); await expect(cancelPublicBooking({ ...credentials(item), expectedStatus: "PENDING" }, new Date("2026-10-01"), prisma)).rejects.toBeInstanceOf(BookingChangeConflictError); }
     const item = await booking("PENDING", 19);
     await expect(cancelPublicBooking(credentials(item), new Date(item.startAt.getTime() - 119 * 60_000), prisma)).rejects.toBeInstanceOf(BookingPolicyError);
@@ -80,7 +80,7 @@ describe.skipIf(!hasDatabaseUrl)("booking cancellation and rescheduling", () => 
     const terminal = await booking("COMPLETED", 27, 13); await expect(reschedulePublicBooking({ ...credentials(terminal), expectedStatus: "PENDING", startAt: "2026-10-27T16:00:00.000Z" }, new Date("2026-10-01"), prisma)).rejects.toBeInstanceOf(BookingChangeConflictError);
   });
 
-  it("enforces internal STAFF scope/self-only target while ADMIN can select eligible staff", async () => {
+  it("enforces internal STAFF scope and self only target while ADMIN can select eligible staff", async () => {
     const own = await booking("PENDING", 28, 13, ids.staffA);
     await expect(rescheduleInternalBooking(staffB, own.id, { expectedStatus: "PENDING", expectedStartAt: own.startAt.toISOString(), startAt: "2026-10-28T16:00:00.000Z" }, new Date("2026-10-01"), prisma)).rejects.toBeInstanceOf(BookingChangeNotFoundError);
     await expect(rescheduleInternalBooking(staffA, own.id, { expectedStatus: "PENDING", expectedStartAt: own.startAt.toISOString(), startAt: "2026-10-28T16:00:00.000Z", staffId: ids.staffB }, new Date("2026-10-01"), prisma)).resolves.toMatchObject({ staffId: ids.staffA });

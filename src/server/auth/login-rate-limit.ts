@@ -48,7 +48,7 @@ export async function enforceLoginRateLimit(
   const secret = process.env.RATE_LIMIT_SECRET;
 
   if (!secret) {
-    throw new Error("RATE_LIMIT_SECRET is required for staff sign-in.");
+    throw new Error("RATE_LIMIT_SECRET is required for staff sign in.");
   }
 
   const accountIdentity = normalizeEmail(

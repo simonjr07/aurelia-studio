@@ -54,7 +54,7 @@ describe.skipIf(!hasDatabaseUrl)("schedule management", () => {
     await deleteAvailabilityRule(admin, first.id, prisma);
   });
 
-  it("converts, scopes, de-overlaps, touches, and deletes blocked time", async () => {
+  it("converts, scopes, removes overlaps, touches, and deletes blocked time", async () => {
     const first = await createBlockedTime(admin, { staffId: ids.staffA, date: "2026-10-13", startTime: "09:00", endTime: "10:00", reason: "Private internal reason" }, prisma);
     const stored = await prisma.blockedTime.findUniqueOrThrow({ where: { id: first.id } });
     expect(stored.startAt.toISOString()).toBe("2026-10-13T13:00:00.000Z");

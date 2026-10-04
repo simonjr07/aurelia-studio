@@ -14,7 +14,7 @@ export const DEVELOPMENT_SERVICE_CATALOGUE = [
     name: "Deep Hydration Facial",
     slug: "deep-hydration-facial",
     description:
-      "A moisture-focused treatment with gentle exfoliation, layered hydration, and a calming mask designed to replenish dry or travel-weary skin.",
+      "A moisture focused treatment with gentle exfoliation, layered hydration, and a calming mask designed to replenish dry or travel weary skin.",
     durationMinutes: 60,
     priceCents: 12_000,
     currency: "USD",
@@ -25,7 +25,7 @@ export const DEVELOPMENT_SERVICE_CATALOGUE = [
     name: "Restorative Massage",
     slug: "restorative-massage",
     description:
-      "A flowing full-body massage using considered pressure and unhurried techniques to soften tension and encourage deep relaxation.",
+      "A flowing full body massage using considered pressure and unhurried techniques to soften tension and encourage deep relaxation.",
     durationMinutes: 60,
     priceCents: 13_500,
     currency: "USD",

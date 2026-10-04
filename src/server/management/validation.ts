@@ -41,7 +41,7 @@ export const serviceInputSchema = serviceBaseSchema.transform((input, context) =
   const slug = normalizeServiceSlug(input.slug || input.name);
   const priceCents = parseMoneyToCents(input.price);
   if (!slug) {
-    context.addIssue({ code: "custom", path: ["slug"], message: "Enter a URL-safe slug or a name that can generate one." });
+    context.addIssue({ code: "custom", path: ["slug"], message: "Enter a URL safe slug or a name that can generate one." });
   }
   if (priceCents === null) {
     context.addIssue({ code: "custom", path: ["price"], message: "Enter a valid amount with at most two decimal places." });

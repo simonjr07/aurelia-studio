@@ -7,7 +7,7 @@ export function PublicFooter() {
         <div className="max-w-md">
           <p className="font-display text-3xl tracking-[0.08em]">AURELIA</p>
           <p className="mt-4 text-sm leading-7 text-cream/60">
-            A calm, considered way to discover beauty and wellness care—and reserve time that works for you.
+            A calm, considered way to discover beauty and wellness care and reserve time that works for you.
           </p>
         </div>
         <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold">

@@ -6,7 +6,7 @@ const timezone = "America/New_York";
 const now = new Date("2026-10-02T16:00:00.000Z");
 
 describe("analytics date ranges", () => {
-  it("defaults to today plus the previous 29 studio-local days", () => {
+  it("defaults to today plus the previous 29 studio local days", () => {
     const range = resolveAnalyticsRange({}, timezone, now);
     expect(range).toMatchObject({ preset: "30d", startDate: "2026-09-03", endDate: "2026-10-02", dayCount: 30 });
     expect(range.startAt.toISOString()).toBe("2026-09-03T04:00:00.000Z");
@@ -32,7 +32,7 @@ describe("analytics date ranges", () => {
     expect(() => resolveAnalyticsRange({ start: "2026-01-01", end: "2027-01-01" }, timezone, now)).toThrow("cannot exceed 365 days");
   });
 
-  it("uses 23- and 25-hour UTC spans for DST transition days", () => {
+  it("uses 23 and 25 hour UTC spans for DST transition days", () => {
     const spring = resolveAnalyticsRange({ start: "2026-03-08", end: "2026-03-08" }, timezone, now);
     const fall = resolveAnalyticsRange({ start: "2026-11-01", end: "2026-11-01" }, timezone, now);
     expect(spring.endAtExclusive.getTime() - spring.startAt.getTime()).toBe(23 * 60 * 60_000);

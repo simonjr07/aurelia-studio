@@ -87,7 +87,7 @@ describe.skipIf(!hasDatabaseUrl)("PostgreSQL booking constraints", () => {
     ).rejects.toThrow();
   });
 
-  it("allows adjacent half-open active bookings", async () => {
+  it("allows adjacent half open active bookings", async () => {
     await createBooking(
       `ADJ-A-${runId}`.slice(0, 32),
       "PENDING",

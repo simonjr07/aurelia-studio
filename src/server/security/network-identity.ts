@@ -5,7 +5,7 @@ const MAX_NETWORK_IDENTITY_LENGTH = 128;
 /**
  * Returns a client network identity only when the request came through
  * Vercel's trusted proxy. Headers such as x-forwarded-for can otherwise be
- * supplied by an untrusted client and must not become a rate-limit key.
+ * supplied by an untrusted client and must not become a rate limit key.
  */
 export function getTrustedNetworkIdentity(request: Request) {
   if (process.env.VERCEL !== "1") {

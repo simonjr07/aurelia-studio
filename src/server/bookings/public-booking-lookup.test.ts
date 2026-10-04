@@ -10,7 +10,7 @@ describe("public booking status labels", () => {
     ["CONFIRMED", "Confirmed"],
     ["COMPLETED", "Completed"],
     ["CANCELLED", "Cancelled"],
-    ["NO_SHOW", "No-show"],
+    ["NO_SHOW", "No show"],
   ] as const)("maps %s to %s", (status, label) => {
     expect(getPublicBookingStatusLabel(status)).toBe(label);
   });

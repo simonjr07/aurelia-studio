@@ -276,7 +276,7 @@ describe.skipIf(!hasDatabaseUrl)("public booking creation", () => {
     expect(stored).toBe(1);
   });
 
-  it("returns safe API validation, success, conflict, not-found, and rate-limit responses", async () => {
+  it("returns safe API validation, success, conflict, not found, and rate limit responses", async () => {
     process.env.RATE_LIMIT_SECRET = "integration-booking-rate-secret-123456789";
     const malformed = await createBookingEndpoint(
       new Request("http://localhost/api/bookings", {

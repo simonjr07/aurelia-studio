@@ -6,7 +6,7 @@ import {
 } from "./reference";
 
 describe("booking references", () => {
-  it("generates compact URL-safe references with 96 random bits", () => {
+  it("generates compact URL safe references with 96 random bits", () => {
     const references = new Set(
       Array.from({ length: 2_000 }, () => createBookingReference()),
     );

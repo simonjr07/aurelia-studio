@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { createScriptDatabaseClient } from "./database-client";
 
 if (process.env.NODE_ENV === "production") {
-  throw new Error("Booking demo bootstrap is development-only.");
+  throw new Error("Booking demo bootstrap is for development only.");
 }
 
 const prisma = createScriptDatabaseClient();

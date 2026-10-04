@@ -7,7 +7,7 @@ import {
   AvailabilityStaffNotEligibleError,
   InvalidAvailabilityDateError,
   PublicServiceNotFoundError,
-  getServiceAvailabilityWithDatabase,
+  getServiceAvailabilityWithinTransaction,
 } from "../availability/availability-service";
 import { getPrismaClient } from "../db/prisma";
 import { createBookingReference } from "./reference";
@@ -92,8 +92,7 @@ async function createWithReference(
   const prisma = getPrismaClient();
 
   return prisma.$transaction(async (transaction) => {
-    const [service, settings] = await Promise.all([
-      transaction.service.findFirst({
+    const service = await transaction.service.findFirst({
         where: {
           slug: input.serviceSlug,
           isPublished: true,
@@ -106,12 +105,11 @@ async function createWithReference(
           priceCents: true,
           currency: true,
         },
-      }),
-      transaction.businessSettings.findUnique({
+      });
+    const settings = await transaction.businessSettings.findUnique({
         where: { id: "default" },
         select: { timezone: true },
-      }),
-    ]);
+      });
 
     if (!service) {
       throw new BookingServiceUnavailableError();
@@ -132,7 +130,7 @@ async function createWithReference(
 
     let availability;
     try {
-      availability = await getServiceAvailabilityWithDatabase(transaction, {
+      availability = await getServiceAvailabilityWithinTransaction(transaction, {
         serviceSlug: input.serviceSlug,
         date: requestedDate,
         staffId: input.staffId,

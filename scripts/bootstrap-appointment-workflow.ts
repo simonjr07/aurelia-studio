@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 import { createScriptDatabaseClient } from "./database-client";
 
 if (process.env.NODE_ENV === "production") {
-  throw new Error("Appointment workflow bootstrap is development-only.");
+  throw new Error("Appointment workflow bootstrap is for development only.");
 }
 
 const credentials = [

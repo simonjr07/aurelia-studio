@@ -61,7 +61,7 @@ describe.skipIf(!hasDatabaseUrl)("service and staff management", () => {
     await updateService(actor, created.id, { name: "Edited Integration Facial", slug: stored.slug, description: "Edited safely.", durationMinutes: 90, price: "99.99", currency: "USD", isPublished: true, isActive: true }, prisma);
   });
 
-  it("creates only normalized, bcrypt-backed ACTIVE STAFF accounts and rejects duplicates", async () => {
+  it("creates only normalized, bcrypt backed ACTIVE STAFF accounts and rejects duplicates", async () => {
     await expect(createStaff(staffActor, {}, prisma)).rejects.toBeInstanceOf(AuthorizationError);
     const email = `  NEW.STAFF-${runId}@EXAMPLE.TEST `;
     const password = "A long temporary password 2026";

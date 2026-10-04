@@ -111,7 +111,7 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
     await prisma.$disconnect();
   });
 
-  it("requires a normalized matching email and returns snapshot-backed safe data", async () => {
+  it("requires a normalized matching email and returns safe snapshot backed data", async () => {
     const result = await verifyPublicBooking({
       reference: `  ${references.PENDING}  `,
       email: `  ${customerEmail.toUpperCase()}  `,
@@ -183,13 +183,13 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
     ).rejects.toBeInstanceOf(PublicBookingVerificationError);
   });
 
-  it("supports every stored status through the API-safe label mapping", async () => {
+  it("supports every stored status through the API safe label mapping", async () => {
     const expected = {
       PENDING: "Pending",
       CONFIRMED: "Confirmed",
       COMPLETED: "Completed",
       CANCELLED: "Cancelled",
-      NO_SHOW: "No-show",
+      NO_SHOW: "No show",
     } as const;
 
     for (const [status, reference] of Object.entries(references)) {

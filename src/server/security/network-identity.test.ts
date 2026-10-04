@@ -27,7 +27,7 @@ describe("trusted network identity", () => {
     ).toBe("203.0.113.4");
   });
 
-  it("does not trust client-supplied forwarding headers outside Vercel", () => {
+  it("does not trust client supplied forwarding headers outside Vercel", () => {
     delete process.env.VERCEL;
 
     expect(

@@ -23,7 +23,7 @@ const statusLabels = {
   CONFIRMED: "Confirmed",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
-  NO_SHOW: "No-show",
+  NO_SHOW: "No show",
 } as const;
 
 const statusStyles = {
@@ -73,7 +73,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     ["Confirmed", summary.CONFIRMED],
     ["Completed", summary.COMPLETED],
     ["Cancelled", summary.CANCELLED],
-    ["No-shows", summary.NO_SHOW],
+    ["No shows", summary.NO_SHOW],
   ] as const;
 
   return (
@@ -84,7 +84,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
             <p className="admin-eyebrow">Operational analytics</p>
             <h1 className="mt-3 font-display text-5xl tracking-[-0.035em] sm:text-6xl">Studio activity</h1>
             <p className="mt-4 max-w-2xl leading-7 text-ink/60">
-              Appointment-date activity from {formatRangeDate(range.startDate)} through {formatRangeDate(range.endDate)}, using {range.timezone} calendar boundaries.
+              Appointment date activity from {formatRangeDate(range.startDate)} through {formatRangeDate(range.endDate)}, using {range.timezone} calendar boundaries.
             </p>
           </div>
           <div className="flex flex-wrap gap-2" aria-label="Analytics range presets">

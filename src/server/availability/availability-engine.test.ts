@@ -37,7 +37,7 @@ describe("availability slot generation", () => {
     expect(isCapacityBlockingBookingStatus("NO_SHOW")).toBe(false);
   });
 
-  it("generates 60-minute slots through the exact closing boundary", () => {
+  it("generates 60 minute slots through the exact closing boundary", () => {
     const slots = generate();
 
     expect(slots).toHaveLength(9);
@@ -92,7 +92,7 @@ describe("availability slot generation", () => {
     ]);
   });
 
-  it("uses half-open overlap semantics for blocked intervals", () => {
+  it("uses half open overlap semantics for blocked intervals", () => {
     const slots = generate({
       blockedIntervals: [
         {
@@ -115,7 +115,7 @@ describe("availability slot generation", () => {
     ]);
   });
 
-  it("allows a slot exactly at the lead-time cutoff", () => {
+  it("allows a slot exactly at the lead time cutoff", () => {
     const slots = generate({
       now: DateTime.fromISO("2026-10-01T09:00:00", { zone: timezone })
         .toUTC()
@@ -135,7 +135,7 @@ describe("availability slot generation", () => {
     ).toHaveLength(0);
   });
 
-  it("skips nonexistent spring-forward local times", () => {
+  it("skips nonexistent spring forward local times", () => {
     const slots = generate({
       date: "2026-03-08",
       windows: [{ startLocalMinutes: 0, endLocalMinutes: 300 }],
@@ -153,7 +153,7 @@ describe("availability slot generation", () => {
     );
   });
 
-  it("chooses one deterministic instant for fall-back ambiguous times", () => {
+  it("chooses one deterministic instant for fall back ambiguous times", () => {
     const slots = generate({
       date: "2026-11-01",
       windows: [{ startLocalMinutes: 0, endLocalMinutes: 240 }],

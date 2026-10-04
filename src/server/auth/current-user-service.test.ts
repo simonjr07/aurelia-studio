@@ -14,7 +14,7 @@ const activeUser: CurrentUserRecord = {
   status: "ACTIVE",
 };
 
-describe("current-user database re-check", () => {
+describe("current user database recheck", () => {
   it("returns an active user without status or sensitive fields", async () => {
     const users: CurrentUserRepository = {
       findById: vi.fn(async () => activeUser),

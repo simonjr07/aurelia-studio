@@ -51,8 +51,8 @@ function sameLocalFields(
 }
 
 /**
- * Resolves one wall-clock value in an IANA zone. Nonexistent DST values are
- * rejected. When a value occurs twice during fall-back, the earlier instant
+ * Resolves one wall clock value in an IANA zone. Nonexistent DST values are
+ * rejected. When a value occurs twice during fall back, the earlier instant
  * is selected so each local grid position has one deterministic meaning.
  */
 export function resolveLocalWallTime(

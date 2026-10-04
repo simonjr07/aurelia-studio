@@ -84,7 +84,7 @@ describe.skipIf(!hasDatabaseUrl)("dashboard analytics", () => {
     await prisma.$disconnect();
   });
 
-  it("uses studio-local boundaries and returns complete current-status counts", async () => {
+  it("uses studio local boundaries and returns complete current status counts", async () => {
     const result = await getDashboardAnalytics(admin, { start: "2031-04-01", end: "2031-04-03" }, new Date("2031-04-04T12:00:00Z"), prisma);
     expect(result.range.startAt.toISOString()).toBe("2031-04-01T04:00:00.000Z");
     expect(result.summary).toEqual({ total: 5, PENDING: 1, CONFIRMED: 1, COMPLETED: 1, CANCELLED: 1, NO_SHOW: 1 });

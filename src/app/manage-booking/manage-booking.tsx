@@ -319,7 +319,7 @@ export function ManageBooking() {
         </p>
         <h2 className="mt-4 font-display text-3xl">Two details, one secure view.</h2>
         <p className="mt-5 leading-7 text-cream/80">
-          We require both your non-sequential reference and booking email. Your
+          We require both your non sequential reference and booking email. Your
           email is sent only in this secure POST request and never appears in
           the page address.
         </p>

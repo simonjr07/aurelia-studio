@@ -74,7 +74,7 @@ export default function ServicesPage() {
             </h1>
           </div>
           <p className="max-w-xl text-lg leading-8 text-ink/60 lg:justify-self-end">
-            Explore each service with clear timing, pricing, and professional availability—then reserve online when you’re ready.
+            Explore each service with clear timing, pricing, and professional availability, then reserve online when you are ready.
           </p>
         </div>
         <div className="pt-10 sm:pt-14">

@@ -13,7 +13,7 @@ const actionLabels: Partial<Record<BookingStatus, string>> = {
   CONFIRMED: "Confirm appointment",
   COMPLETED: "Complete appointment",
   CANCELLED: "Cancel appointment",
-  NO_SHOW: "Mark as no-show",
+  NO_SHOW: "Mark as no show",
 };
 
 export function StatusActions({

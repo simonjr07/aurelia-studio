@@ -84,3 +84,7 @@ Roll back the immutable Vercel deployment only after identifying whether the fai
 ## Hosted evidence status
 
 As of this repository update, hosted deployment, migration execution, provider logs, screenshots, and hosted QA are **not yet performed**. This document is a runbook, not evidence that those actions succeeded.
+
+## Local Supabase connection changes
+
+During local development, Prisma is intentionally cached as a singleton so hot reloads do not create a new pool for every module evaluation. After changing `DATABASE_URL`, `DIRECT_URL`, or pool-related environment values, fully restart the Next.js development process before testing database-backed actions. A connection timeout that disappears after that restart is operational stale-process/pool state, not evidence that production pool defaults should be changed. Investigate repeatable timeouts with provider logs and connection metrics before adjusting pool limits or timeouts.

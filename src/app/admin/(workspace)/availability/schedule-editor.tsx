@@ -30,11 +30,12 @@ export function ScheduleEditor({ schedule }: { schedule: Schedule }) {
 
   async function createRule(event: FormEvent<HTMLFormElement>, weekday: Weekday) {
     event.preventDefault(); const key = `add-${weekday}`; if (pending) return; setPending(key); setMessage("");
-    const form = new FormData(event.currentTarget);
+    const submittedForm = event.currentTarget;
+    const form = new FormData(submittedForm);
     try {
       const response = await fetch("/api/admin/availability", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ staffId: schedule.staff.id, weekday, startTime: form.get("startTime"), endTime: form.get("endTime") }) });
       const body = await response.json(); if (!response.ok) return setMessage(errorText(body, "The availability window could not be added."));
-      event.currentTarget.reset(); router.refresh();
+      submittedForm.reset(); setMessage("Availability window added."); router.refresh();
     } catch { setMessage("The availability window could not be added."); } finally { setPending(""); }
   }
 
@@ -45,11 +46,11 @@ export function ScheduleEditor({ schedule }: { schedule: Schedule }) {
   }
 
   async function createBlock(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (pending) return; setPending("block"); setMessage(""); const form = new FormData(event.currentTarget);
+    event.preventDefault(); if (pending) return; setPending("block"); setMessage(""); const submittedForm = event.currentTarget; const form = new FormData(submittedForm);
     try {
       const response = await fetch("/api/admin/blocked-times", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ staffId: schedule.staff.id, date: form.get("date"), startTime: form.get("startTime"), endTime: form.get("endTime"), reason: form.get("reason") }) });
       const body = await response.json(); if (!response.ok) return setMessage(errorText(body, "The blocked period could not be added."));
-      event.currentTarget.reset(); router.refresh();
+      submittedForm.reset(); setMessage("Blocked period added."); router.refresh();
     } catch { setMessage("The blocked period could not be added."); } finally { setPending(""); }
   }
 

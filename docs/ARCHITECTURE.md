@@ -2,16 +2,16 @@
 
 ## System context
 
-Local and initial application flow:
+Local application flow:
 
 ```text
-Browser → Next.js App Router → server side application/domain logic → Prisma → PostgreSQL
+Browser -> Next.js App Router -> server-side application and domain logic -> Prisma -> PostgreSQL
 ```
 
-Planned production flow:
+Production flow:
 
 ```text
-Browser → Vercel / Next.js → server side application/domain logic → Prisma → Supabase PostgreSQL
+Browser -> Vercel and Next.js -> server-side application and domain logic -> Prisma -> Supabase PostgreSQL
 ```
 
 This is a modular monolith: one deployable application with deliberate internal boundaries. That keeps operations simple without mixing presentation, authorization, scheduling policy, and persistence.
@@ -19,16 +19,16 @@ This is a modular monolith: one deployable application with deliberate internal 
 ## Boundaries
 
 - **UI (`src/app`, `src/components`):** routes, layouts, server rendered views, forms, and small interactive client components. UI may format view data but does not decide booking eligibility or authorization.
-- **Server actions / route handlers:** trusted entry points for mutations and HTTP endpoints. They authenticate, parse inputs, invoke use cases, and translate known outcomes into responses. Public APIs use route handlers when an HTTP contract is useful; tightly coupled form mutations may use server actions.
-- **Domain (`src/features/<feature>/domain`):** framework independent rules such as slot calculation, status transitions, cancellation eligibility, and overlap semantics. It accepts typed data and clocks/timezones explicitly.
+- **Server actions and route handlers:** trusted entry points for mutations and HTTP endpoints. They authenticate, parse inputs, invoke use cases, and translate known outcomes into responses. Public APIs use route handlers when an HTTP contract is useful. Tightly coupled form mutations may use server actions.
+- **Domain (`src/features/<feature>/domain`):** framework-independent rules such as slot calculation, status transitions, cancellation eligibility, and overlap semantics. It accepts typed data, clocks, and time zones explicitly.
 - **Application services (`src/features/<feature>/application`):** orchestrate domain rules, authorization, repositories, and transactions for one use case.
 - **Repositories / database (`src/server/db`, feature repositories):** Prisma access, query composition, persistence mapping, and transaction boundaries. Prisma types should not become the public contract of every layer. `src/server/db/prisma.ts` is server-only and owns the pooled runtime singleton.
 - **Authentication (`src/auth.ts`, `src/server/auth`):** Auth.js configuration, credential verification, login abuse controls, session shaping, database backed current actor resolution, and role policy.
 - **Public services (`src/server/services`):** server-only public query entry points, explicit Prisma projections, visibility filtering, eligible staff projection, and development catalogue bootstrap policy.
 - **Availability (`src/server/availability`):** pure wall clock slot generation plus a bounded Prisma adapter that supplies service, staff, recurring rules, blocks, and capacity blocking bookings to the domain core.
 - **Booking creation (`src/server/bookings`):** strict public validation, opaque references, persistent abuse controls, transactional scheduling revalidation, snapshot creation, and database conflict translation.
-- **Public booking management (`src/server/bookings`):** strict reference/email verification, separate persistent abuse controls, snapshot backed safe projection, generic enumeration resistant outcomes, cutoff aware cancellation, and transactional rescheduling.
-- **Appointment operations (`src/server/appointments`):** role scoped queries, studio local day boundaries, centralized state machine, conditional transactional status writes, and audit creation.
+- **Public booking management (`src/server/bookings`):** strict booking-reference and email verification, separate persistent abuse controls, snapshot-backed safe projections, generic enumeration-resistant outcomes, cutoff-aware cancellation, and transactional rescheduling.
+- **Appointment operations (`src/server/appointments`):** role-scoped queries, studio-local day boundaries, a centralized state machine, conditional transactional status writes, and audit creation.
 - **Analytics (`src/server/analytics`):** ADMIN only range parsing and bounded aggregate queries for current status counts, studio local booking trends, historical service popularity, and staff workload.
 - **Authorization:** centralized policy checks called from every protected server entry point. Page visibility is not an authorization control.
 - **Validation:** Zod schemas at trust boundaries. Validation shapes syntax; domain code still evaluates contextual business rules.
@@ -54,9 +54,9 @@ Folders should be created when their first real module exists; empty abstraction
 
 ## Authentication and authorization
 
-`/admin/login` is the shared entry point for `STAFF` and `ADMIN`. Auth.js verifies normalized credentials with bcrypt and issues an eight hour JWT containing only the user id, name, email, and role. JWT data is not the final access decision: every protected render resolves that id against PostgreSQL again and rejects missing or `DISABLED` users. This also makes current database role changes authoritative without waiting for the JWT to expire.
+`/admin/login` is the shared entry point for `STAFF` and `ADMIN`. Auth.js verifies normalized credentials with bcrypt and issues an eight-hour JWT containing only the user id, name, email, and role. JWT data is not the final access decision. Every protected render resolves that id against PostgreSQL again and rejects missing or `DISABLED` users. This makes current database role changes authoritative without waiting for the JWT to expire.
 
-The `/admin` route group has a server rendered protected layout and repeats the staff policy at its leaf page. Future Server Actions and Route Handlers must call the same server authorization helpers; hiding a navigation item is only presentation. `ADMIN` is reserved for management operations, while the exact appointment and blocked time resource scope for `STAFF` remains a product decision.
+The `/admin` route group has a server-rendered protected layout and repeats the staff policy at its leaf page. Server actions and route handlers call the same authorization helpers. Hiding a navigation item is only presentation. `ADMIN` is reserved for management operations, while `STAFF` access is limited to assigned appointments and the staff member's own schedule.
 
 Login attempts use fixed 15 minute PostgreSQL windows with a limit of ten attempts for both the normalized account identifier and an available network signal. Bucket keys are HMAC digests, so raw emails and network values are not stored in the limiter table.
 
@@ -64,17 +64,17 @@ Login attempts use fixed 15 minute PostgreSQL windows with a limit of ten attemp
 
 `/services` and `/services/[slug]` are Server Component routes that query Prisma directly through the public service boundary. Both list and detail require `isPublished = true` and `isActive = true`; a missing or private slug produces `notFound()` before page content is rendered. Queries use explicitly allowed selections and deterministic name/slug ordering rather than serializing complete Prisma records.
 
-Eligible professionals are fetched in the detail query, avoiding an N+1 pattern. Only explicitly assigned, `ACTIVE` users are eligible, and only `id` and `name` leave the repository. An assigned active `ADMIN` may appear because the assignment is deliberate and administrators already satisfy staff level operational policy; role itself is never exposed publicly. Future availability logic will further determine who can serve a concrete time.
+Eligible professionals are fetched in the detail query, avoiding an N+1 pattern. Only explicitly assigned, `ACTIVE` users are eligible, and only `id` and `name` leave the repository. An assigned active `ADMIN` may appear because the assignment is deliberate and administrators already satisfy staff-level operational policy. The role itself is never exposed publicly. Availability rules determine who can serve a specific time.
 
 ## Availability engine
 
-`generateAvailabilitySlots()` is framework- and database independent. It merges overlapping local availability windows, anchors starts to the studio local midnight grid, rejects starts whose wall clock time does not exist, measures service duration in elapsed instants, and applies half open overlap checks for blocks and bookings. Fall back ambiguous local times choose the earlier instant exactly once. The service layer performs one service/staff query followed by bounded rules, block, and booking queries for the requested local day; it aggregates identical start instants across eligible staff without assigning anyone.
+`generateAvailabilitySlots()` is framework- and database-independent. It merges overlapping local availability windows, anchors starts to the studio-local midnight grid, rejects starts whose wall-clock time does not exist, measures service duration in elapsed instants, and applies half-open overlap checks for blocks and bookings. Fall-back ambiguous local times choose the earlier instant exactly once. The service layer performs one service and staff query followed by bounded rules, block, and booking queries for the requested local day. It aggregates identical start instants across eligible staff without assigning anyone.
 
 The public endpoint uses the configured `BusinessSettings.timezone`, `bookingLeadMinutes`, `bookingHorizonDays`, and `slotIntervalMinutes`. Horizon boundaries are inclusive (`local today + bookingHorizonDays`), and a slot exactly at `now + lead time` is allowed. Availability remains an advisory snapshot.
 
 ## Public booking creation
 
-`/book/[slug]` is a focused client state flow for staff, date, time, details, review, and confirmation. The browser fetches candidate slots but submits only identifiers and contact input. `createPublicBooking()` validates again and opens one interactive Prisma transaction. Inside it, the service and settings are re read, the existing availability adapter runs against the transaction client, a specific staff member is verified or an available staff member is selected, authoritative end time/snapshots are derived, and the `PENDING` booking plus initial status event are inserted atomically.
+`/book/[slug]` is a focused client-state flow for staff, date, time, details, review, and confirmation. The browser fetches candidate slots but submits only identifiers and contact input. `createPublicBooking()` validates again and opens one interactive Prisma transaction. Inside it, the service and settings are reread, the availability adapter runs against the transaction client, a specific staff member is verified or an available staff member is selected, authoritative end time and snapshots are derived, and the `PENDING` booking plus initial status event are inserted atomically.
 
 “Any available” sorts the slot’s currently eligible staff by stable UUID and chooses the first. Specific staff requests never switch silently. The outer reference collision loop retries the entire transaction because PostgreSQL aborts a transaction after a unique violation. A PostgreSQL active overlap violation is translated to a safe domain conflict; the exclusion constraint remains authoritative when concurrent transactions both pass advisory revalidation.
 
@@ -86,7 +86,7 @@ Lookup throttling reuses the shared fixed window/HMAC primitive. PostgreSQL stor
 
 ## Cancellation and rescheduling
 
-Every public change re verifies the opaque reference and normalized booking email. Customer cancellation and rescheduling are limited to `PENDING` or `CONFIRMED` bookings and read their respective cutoff minutes from `BusinessSettings`; an action exactly at the cutoff instant is allowed. Cancellation conditionally changes status and appends a public `BookingStatusEvent`. Rescheduling updates the same booking row, preserving reference, status, and booking snapshots, and appends an immutable `BookingRescheduleEvent` describing the old/new staff and interval.
+Every public change re-verifies the opaque reference and normalized booking email. Customer cancellation and rescheduling are limited to `PENDING` or `CONFIRMED` bookings and read their respective cutoff minutes from `BusinessSettings`. An action exactly at the cutoff instant is allowed. Cancellation conditionally changes status and appends a public `BookingStatusEvent`. Rescheduling updates the same booking row, preserves its reference, status, and snapshots, and appends an immutable `BookingRescheduleEvent` describing the previous and new staff assignment and interval.
 
 Rescheduling runs the TASK-005 availability service again inside the database transaction, excludes the current booking from capacity reads, and uses its snapshotted duration. A stale expected status/start becomes a conflict. PostgreSQL's active booking GiST exclusion constraint remains authoritative if concurrent work races after advisory revalidation.
 
@@ -96,7 +96,7 @@ Internal cancellation continues through the TASK-008 status transition and there
 
 Every page and mutation first resolves an active database backed actor. `STAFF` queries include `staffId = actor.id`; `ADMIN` queries are unscoped. Out of scope detail and mutation requests use not found semantics. “Today” is `[local midnight, next local midnight)` in `BusinessSettings.timezone`; “upcoming” starts at tomorrow’s local midnight, so the sets never overlap.
 
-Status transitions are centralized as `PENDING → CONFIRMED|CANCELLED` and `CONFIRMED → COMPLETED|CANCELLED|NO_SHOW`; terminal states have no exits. Mutation transactions re read current status, compare it with the rendered expected status, conditionally update that exact current state, and append the actor attributed event. A stale conditional write rolls back and becomes `409`.
+Status transitions are centralized as `PENDING → CONFIRMED|CANCELLED` and `CONFIRMED → COMPLETED|CANCELLED|NO_SHOW`; terminal states have no exits. Mutation transactions reread current status, compare it with the rendered expected status, conditionally update that exact current state, and append the actor-attributed event. A stale conditional write rolls back and becomes `409`.
 
 ## Administrator catalogue and team management
 
@@ -108,25 +108,25 @@ Assignment replacement verifies the target is a STAFF account and every service 
 
 `/admin/availability` gives administrators a STAFF only target list and redirects staff members to their own schedule. Every detail query and mutation rechecks `ADMIN || actor.id === targetStaffId`; cross staff access uses not found semantics. Disabled staff remain inspectable and existing entries removable, but new windows and blocks are rejected.
 
-Recurring windows retain local studio wall clock minutes and use create/delete operations. Block input is resolved through the configured IANA timezone to concrete instants, rejecting nonexistent DST times and choosing the earlier instant during fall back ambiguity. Serializable transactions reject overlapping half open windows/blocks and blocks that overlap `PENDING` or `CONFIRMED` bookings. Schedule changes never alter bookings and flow directly into the existing availability engine.
+Recurring windows retain local studio wall-clock minutes and use create and delete operations. Block input is resolved through the configured IANA time zone to concrete instants, rejecting nonexistent DST times and choosing the earlier instant during fall-back ambiguity. Serializable transactions reject overlapping half-open windows or blocks and blocks that overlap `PENDING` or `CONFIRMED` bookings. Schedule changes never alter bookings and flow directly into the availability engine.
 
 ## Dashboard analytics
 
-`/admin/analytics` is a dynamic Server Component protected by `requireAdmin()`. The server-only analytics service repeats the ADMIN assertion beside its database reads. It reads `BusinessSettings.timezone`, converts validated local calendar dates to the half open UTC interval `[start local midnight, day after end local midnight)`, and filters by appointment `startAt` rather than booking creation time. The default is today plus the previous 29 studio local days; presets cover 7, 30, and 90 days, while custom ranges are limited to 365 inclusive days.
+`/admin/analytics` is a dynamic Server Component protected by `requireAdmin()`. The server-only analytics service repeats the ADMIN assertion beside its database reads. It reads `BusinessSettings.timezone`, converts validated local calendar dates to the half-open UTC interval `[start local midnight, day after end local midnight)`, and filters by appointment `startAt` rather than booking creation time. The default is today plus the previous 29 studio-local days. Presets cover 7, 30, and 90 days, while custom ranges are limited to 365 inclusive days.
 
 Prisma `groupBy` supplies current `Booking.status` counts. Parameterized PostgreSQL queries bucket appointments with `startAt AT TIME ZONE <studio timezone>`, rank services by stable id while displaying the most recent within range snapshot name, and calculate staff workload as not cancelled appointment count plus snapshotted scheduled minutes. Disabled staff remain in historical results and their current live name is displayed. Queries are bounded, set based, and return aggregate only DTOs with no customer PII, booking references, rate limit data, or financial metrics. The page opts out of static caching and uses lightweight accessible HTML/CSS visualizations instead of a chart dependency.
 
 ## Request and mutation rules
 
 1. Treat request data, search parameters, sessions, and database reads crossing a trust boundary as untrusted.
-2. Validate input and resolve the actor server side.
+2. Validate input and resolve the actor server-side.
 3. Authorize the action against both role and resource scope.
 4. Execute the use case; critical booking mutations run in a database transaction.
 5. Return a narrow result and invalidate affected cached data explicitly.
 
 ## Booking engine design notes
 
-Availability generation will:
+Availability generation:
 
 1. Resolve the studio timezone and requested local date.
 2. Load active service duration, business opening windows, eligible staff, and each staff member’s availability rules.
@@ -135,15 +135,15 @@ Availability generation will:
 5. Apply lead time, booking horizon, slot interval, and boundary rules.
 6. Keep only candidates whose entire service interval fits and return timezone labeled results.
 
-Slot results are advisory snapshots. Two customers can see the same slot before either submits. Final creation revalidates all rules on the server and atomically prevents overlapping active bookings at the PostgreSQL layer. The migration uses a half open interval `[startAt, endAt)` and a partial PostgreSQL GiST exclusion constraint over staff and `tstzrange`, limited to `PENDING` and `CONFIRMED`; a UI check is never sufficient.
+Slot results are advisory snapshots. Two customers can see the same slot before either submits. Final creation revalidates all rules on the server and atomically prevents overlapping active bookings at the PostgreSQL layer. The migration uses the half-open interval `[startAt, endAt)` and a partial PostgreSQL GiST exclusion constraint over staff and `tstzrange`, limited to `PENDING` and `CONFIRMED`. A UI check is never sufficient.
 
 ## Time and data conventions
 
-- Store booking instants as timezone aware PostgreSQL timestamps and operate on UTC instants internally.
+- Store booking instants as time-zone-aware PostgreSQL timestamps and operate on UTC instants internally.
 - The bootstrap IANA studio timezone is `America/New_York`.
 - Recurring availability stores local minutes after midnight, not UTC timestamps, and is converted for each concrete date in the studio timezone.
 - Inject the current clock into testable policy code rather than reading it throughout the application.
 
 ## Rendering and dependencies
 
-Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`; runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI/migrations. The driver pool is bounded and created lazily through a development safe singleton. Auth.js, bcrypt, and Zod are active server side dependencies as of TASK-003; Luxon is used by TASK-005 for explicit IANA timezone and DST conversion.
+Server Components are the default. Client Components are limited to interactions that need browser state. Prisma 7 uses generated client code plus `PrismaPg`. Runtime uses `DATABASE_URL`, while `prisma7.config.ts` prefers `DIRECT_URL` for CLI and migration work. The driver pool is bounded and created lazily through a development-safe singleton. Auth.js, bcrypt, and Zod provide server-side identity and validation. Luxon handles explicit IANA time-zone and DST conversion.

@@ -1,91 +1,105 @@
 # Security Baseline
 
+## Scope
+
+This document describes protections implemented in Aurelia Studio, the assumptions required in production, and the risks intentionally left outside V1. It is an engineering security baseline, not a penetration test, compliance certification, or external security audit.
+
 ## Identity and access
 
-- Auth.js credentials authentication is restricted to staff users stored in PostgreSQL.
-- Passwords are hashed with bcrypt work factor 12; plaintext passwords are never returned, persisted, or logged.
-- Authentication failures are generic. The JWT expires after eight hours and contains only id, name, email, and role.
-- Every protected request re reads the user so deleted or disabled accounts are denied and role changes take effect without waiting for expiry.
-- Authorize every protected server operation with `requireStaff()` or `requireAdmin()` plus the future resource scope policy. UI visibility, route naming, and client state are not controls.
-- Appointment queries and mutations enforce resource scope server side: staff are limited to `booking.staffId === actor.id`; admins may access all. Out of scope ids use non enumerating not found behavior.
-- Reserve service/staff/settings administration for `ADMIN`; document and test each `STAFF` permission.
-- Service/staff management pages call `requireAdmin()`, and every management API plus server-only mutation independently asserts ADMIN. Staff links being hidden is only presentation.
-- Ordinary management can create and edit STAFF only; role is forced server side and ADMIN identities are outside the editable query boundary. Disablement takes effect through the existing database backed current user recheck.
-- Schedule mutations re resolve an active actor and authorize the target resource server side: ADMIN may manage STAFF accounts, while STAFF may use only their own id. Cross staff reads/deletes are hidden as not found, and disabled targets cannot receive new entries.
-- Analytics navigation is ADMIN only, and both the `/admin/analytics` page and its server-only query service independently assert an active ADMIN before reading aggregates. No public or STAFF analytics endpoint exists.
+Auth.js credentials authentication is limited to staff records stored in PostgreSQL. Passwords are hashed with bcrypt at cost 12 and are never returned, persisted as plaintext, or logged. Authentication failures use generic messages.
+
+The JWT has an eight-hour maximum lifetime and contains only the user id, name, email, and role. Every protected request reloads the current user from PostgreSQL, so deleted or disabled accounts are denied and role changes take effect without waiting for token expiry.
+
+Authorization is enforced at server boundaries:
+
+1. ADMIN users can manage services, staff, assignments, schedules, appointments, and analytics.
+2. STAFF users can access only appointments and schedule resources within their assigned scope.
+3. Out-of-scope resource requests use non-enumerating not-found behavior.
+4. Management APIs and domain services repeat authorization checks beside each mutation.
+5. Navigation visibility is a convenience, not a security control.
+
+Ordinary staff management can create and edit STAFF accounts only. The server forces the role and permits only `ACTIVE` or `DISABLED` status. ADMIN identities remain outside that mutation boundary.
 
 ## Input and mutation safety
 
-- Validate all untrusted input server side with strict Zod schemas, normalization, size limits, and allow lists.
-- Use Prisma parameterization and avoid interpolated raw SQL. Review any hand written migration SQL.
-- Protect state changes against cross site request abuse using framework/Auth.js mechanisms and same origin design.
-- Re read relevant state inside transactions; never trust a client supplied price, duration, role, status, or availability result.
-- Status actors and audit `fromStatus` always come from the active session/database state. Client expected status is used only to detect staleness, never as the audit fact.
+All untrusted input is validated on the server with strict Zod schemas, normalization, length bounds, and allow lists. Prisma parameterizes queries, including raw analytics queries that accept validated values.
 
-## Public bookings and abuse controls
+Critical mutations reload authoritative state inside a transaction. Client input cannot set prices, duration, end time, booking snapshots, roles, authoritative status, or availability results. Expected status and start time are used only to detect stale requests.
 
-- Generate public booking references with cryptographically secure randomness and enough entropy to resist enumeration.
-- Booking references use a recognizable `AUR-` prefix plus 96 bits from `randomBytes`, encoded as URL safe base64 without sequential/customer derived material.
-- Require a second verification factor or signed management token for booking details/changes; do not reveal whether a guessed reference exists.
-- Read only public lookup requires the exact opaque reference plus normalized booking email in a POST body. Wrong email and unknown reference attempts share one response and one query shape.
-- Rate limit login, booking creation, public lookup, reschedule, and cancellation. Combine trusted platform network signals with pseudonymous action identifiers where appropriate.
-- Keep PostgreSQL overlap enforcement as the last line of defense against concurrent double booking.
-- Public booking input is a strict allow list; price, duration, end time, snapshots, status, and availability are always re derived inside the transaction.
-- Booking throttling permits five attempts per 15 minute window for both normalized email and available network identity. Only HMAC SHA256 keys are persisted, and failures do not disclose prior bookings.
-- Lookup throttling permits ten attempts per 15 minute window for reference, normalized email, and available network identity. No plaintext lookup identity is persisted.
-- Public cancellation and rescheduling re verify reference plus normalized email on every request and deliberately share the lookup's generic unknown/wrong email response. Each action has its own five attempt, 15 minute HMAC buckets for reference, email, and available network identity; those counters cannot affect login or booking creation.
-- Customer change cutoffs and expected state/start are rechecked inside the transaction. A reschedule never trusts a client duration, end time, staff eligibility, or availability result; it excludes only the current booking before PostgreSQL enforces final overlap safety.
+Browser mutations use POST requests or protected server actions. JSON mutation routes are not CORS enabled, authenticated routes use Auth.js cookies, and login redirects are restricted to internal destinations.
 
-## PII and information exposure
+## Public booking protection
 
-- Collect only contact data required to deliver and manage an appointment.
-- Restrict staff visible customer fields to operational need; do not expose internal user data in public responses.
-- Customer email, phone, and notes are visible only on an authorized internal appointment detail page, never lists, URLs, logs, or analytics.
-- Redact emails, phone numbers, session values, tokens, notes, and credentials from logs/errors/analytics.
-- Define retention and deletion policy before production. Backups inherit the same sensitivity.
-- Avoid placing PII or secrets in URLs, cache keys, client telemetry, test fixtures, screenshots, or commit history.
-- Verified booking responses are private/no-store, and `/manage-booking` is `noindex`. The browser clears verification credentials after success and does not persist them.
-- Analytics DTOs are aggregate allow lists: they exclude customer names, emails, phones, notes, booking references, rate limit buckets, and revenue like values. Raw database errors are not rendered. Date inputs are strictly validated and bounded to 365 inclusive days; raw SQL uses Prisma parameterization. The page is dynamically rendered with revalidation disabled so operational data cannot leak through a shared public cache.
+Booking references contain an `AUR-` prefix and 96 cryptographically random bits encoded with URL-safe base64. They are opaque, case-sensitive identifiers rather than sequential or customer-derived values.
 
-## Secrets and environment
+Public lookup and every customer change require the exact booking reference and normalized booking email. Unknown references and incorrect emails return the same generic verification failure. Credentials are sent in POST bodies, never placed in page URLs, and are not persisted in browser storage after successful verification.
 
-- Store secrets in ignored local environment files and Vercel/Supabase secret stores. Commit only a documented `.env.example` with empty/not sensitive placeholders when variables exist.
-- Use separate development, preview, and production credentials with least privilege and rotation support.
-- Never commit database URLs, Auth.js secrets, passwords, tokens, or production customer data.
-- Prevent public environment prefixes from being applied to server secrets.
+Login, booking creation, lookup, cancellation, and rescheduling use separate fixed-window rate limits. PostgreSQL stores only HMAC SHA-256 bucket identities, not raw email addresses, references, or network values. On Vercel, network identity is accepted only from the platform's trusted forwarding header. Outside Vercel, generic forwarding headers are ignored.
 
-`AUTH_SECRET` signs authentication state. `RATE_LIMIT_SECRET` independently HMACs login limiter identities and must be at least 32 characters. Administrator provisioning reads credentials from process environment variables and refuses production execution unless both the documented mode flag and exact confirmation phrase are supplied.
+Customer cancellation and rescheduling recheck policy cutoffs, expected state, and expected start time inside the transaction. Rescheduling recalculates staff eligibility and availability and never trusts client-provided duration or end time.
 
-Staff temporary passwords are accepted only by the create endpoint, bounded for bcrypt, hashed at cost 12 before persistence, omitted from all return selections, and never logged or displayed again. Unique email/slug database failures are translated to safe messages without raw Prisma details.
+## Data privacy and response safety
 
-Blocked time reasons remain internal to authorized schedule pages. Schedule DTOs exclude password data, customer data, booking details, and rate limit state. Booking overlap errors reveal only that an appointment conflicts, not its customer or identity.
+Public DTOs are explicit allow lists. They exclude customer email, phone, notes, staff email, authentication data, rate-limit records, and internal audit details. The verified booking response includes the assigned staff id only to support the existing professional selection during rescheduling. The server still requires the booking reference and email before any read or change.
 
-## Operational hardening
+Customer contact details appear only on authorized internal appointment details. They are excluded from appointment lists, analytics, URLs, logs, and screenshots. Analytics return aggregate data without booking references, customer PII, rate-limit facts, or revenue claims.
 
-Use HTTPS, secure headers, dependency review, protected branches/CI, migration backups, safe error pages, audit events, and actionable monitoring. Security review includes authorization bypass, ID enumeration, mass assignment, injection, sensitive caching, concurrency, and denial of service risks. Suspected incidents should support credential rotation, account disablement, log review, impact assessment, and recovery.
+Sensitive API responses use `no-store`, verified booking management is marked `noindex`, and operational analytics are rendered dynamically without shared caching.
 
-## Task #14 production hardening
+## Browser and application hardening
 
-The application sends a baseline policy on every response: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a strict cross origin referrer policy, a restrictive permissions policy, and CSP with same origin resources, `form-action 'self'`, and `frame-ancestors 'none'`. `X-Powered-By` is disabled. The CSP permits inline scripts and styles because the current Next.js/React rendering path requires them; it does not permit `unsafe-eval`, remote scripts, frames, or plugins. A nonce based CSP can be evaluated later if the rendering architecture changes.
+The application sends the following baseline protections:
 
-Rate limits use independent HMAC SHA256 buckets per action and never persist raw email, reference, or network values. On Vercel, network identity is read only from Vercel's trusted forwarding header. Outside Vercel, client supplied forwarding headers are intentionally ignored; email/reference buckets remain the effective application level defense. This is not a substitute for Vercel edge/WAF controls, DDoS protection, or abuse monitoring.
+1. Content Security Policy with same-origin resources, `form-action 'self'`, and `frame-ancestors 'none'`
+2. `X-Content-Type-Options: nosniff`
+3. `X-Frame-Options: DENY`
+4. A restrictive referrer policy
+5. A restrictive permissions policy
+6. Disabled `X-Powered-By`
 
-Public verification DTOs are explicit allow lists. The verified booking response includes the assigned staff UUID solely to preserve the existing "keep this professional" reschedule flow; it is not sufficient to access or change a booking, and the server re verifies reference plus normalized email, scopes the booking, and independently validates staff eligibility. It excludes staff email, customer email/phone/note, internal notes, audit data, password/auth data, and limiter data.
+The current Next.js rendering path requires inline scripts and styles. The policy does not permit `unsafe-eval`, remote scripts, frames, or plugins in production. React escapes rendered text, and the repository does not use `dangerouslySetInnerHTML`.
 
-All browser mutations use POST or protected server actions; there are no GET mutations. Authenticated browser requests use Auth.js cookies and same origin application routes, while JSON mutation requests are not CORS enabled. Login redirects use internal application destinations. React rendering escapes supplied text, and the repository contains no `dangerouslySetInnerHTML` use. Prisma calls are parameterized; analytics raw SQL uses Prisma parameters for values, including its validated timezone.
+No file upload surface exists in V1.
 
-Sensitive API responses are `no-store`; verified booking management is `noindex`, and operational analytics are dynamically rendered without shared caching. Public marketing pages remain indexable. No file upload surface exists in V1.
+## Database and concurrency protection
 
-### Deployment and residual risks
+PostgreSQL remains the final authority for active booking overlap. A GiST exclusion constraint prevents overlapping `PENDING` or `CONFIRMED` appointments for the same professional, even when concurrent requests both pass advisory availability checks.
 
-Production requires HTTPS, independent `AUTH_SECRET` and `RATE_LIMIT_SECRET` values, a pooled TLS `DATABASE_URL` for runtime traffic, and a direct TLS `DIRECT_URL` for controlled migrations. Use separate preview/production credentials, least privilege database roles, backups with restoration drills, and one migration runner per release.
+Booking creation and rescheduling use transactional revalidation. Status transitions use conditional writes and append audit events. Schedule changes cannot silently rewrite existing bookings.
 
-Residual risks intentionally outside V1 include no MFA, password reset, CAPTCHA, customer account model, or edge/WAF rate limiting. JWTs have an eight hour maximum lifetime; protected operations re check the active user in PostgreSQL so role, disablement, and deletion changes take effect promptly, but an already issued browser token cannot itself be centrally revoked. This review and its automated checks are not a substitute for hosted browser QA, penetration testing, monitoring, or incident response exercises.
+## Secrets and production configuration
 
-### Dependency audit (2026-10-02)
+Secrets are stored in ignored local environment files and in Vercel or Supabase secret storage. The repository does not contain production database URLs, authentication secrets, rate-limit secrets, passwords, or tokens.
 
-`npm audit` reported six findings: two moderate Vitest/@vitest mocker findings in test tooling and four high findings through Prisma CLI's optional MySQL related dependency chain (`@prisma/config` → `deepmerge-ts` and `mysql2`). The application uses PostgreSQL through `pg`, not MySQL, and Vitest is not shipped with the application runtime. The offered remediation downgrades Prisma to a breaking major version and upgrades Vitest across a breaking major version, so no automatic fix was applied in this hardening pass. Reassess after Prisma and Vitest publish compatible non vulnerable updates; do not use `npm audit fix --force` blindly.
+Production uses:
 
-## Hosted verification status
+1. A pooled TLS `DATABASE_URL` for application traffic
+2. A direct or session TLS `DIRECT_URL` for controlled migrations
+3. An independent high-entropy `AUTH_SECRET`
+4. An independent high-entropy `RATE_LIMIT_SECRET`
 
-No hosted security evidence is claimed yet. Before launch, verify the deployed production hostname, not merely a preview, for CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, framing protection, absence of `X-Powered-By`, no-store booking responses, and noindex private routes. Review Vercel logs and Supabase connection behavior without copying secrets, tokens, customer data, or connection strings into the repository.
+Administrator provisioning accepts short-lived environment inputs, requires explicit production confirmation, refuses duplicate emails, and does not print the supplied password.
+
+## Production debugging hygiene
+
+The mixed-case booking reference investigation used temporary server-only diagnostics. Those diagnostics reported only boolean match facts, lengths, prefix checks, and safe error classifications. They never included raw references, email addresses, request bodies, cookies, tokens, connection strings, or environment values.
+
+The validation defect was fixed, regression coverage was added, and the temporary diagnostics were removed.
+
+## Hosted verification
+
+Production QA at [aurelia-studio-orcin.vercel.app](https://aurelia-studio-orcin.vercel.app) verified protected administrator routes, reference and email booking access, public booking changes, authenticated appointment workflows, and the absence of obvious secret or private data exposure in the reviewed journeys.
+
+These checks provide release evidence but do not replace ongoing monitoring, provider-level abuse controls, backup restoration exercises, or professional security assessment.
+
+## Dependency review
+
+The dependency audit recorded on 2026-10-02 reported six findings. Two moderate findings were in Vitest test tooling. Four high findings were inherited through Prisma CLI's optional MySQL dependency chain. Aurelia Studio uses PostgreSQL through `pg`, not MySQL, and Vitest is not shipped in the application runtime.
+
+The available automatic remediation required breaking Prisma and Vitest version changes, so it was not applied blindly. Dependencies should be reassessed when compatible fixed releases are available.
+
+## Residual risks and V1 exclusions
+
+V1 does not include MFA, password reset, CAPTCHA, customer accounts, edge WAF rules, centralized JWT revocation, formal retention automation, or automated incident response. The JWT itself cannot be centrally revoked after issue, although every protected operation rechecks the current PostgreSQL user.
+
+Production operations should maintain independent credentials, least-privilege database roles, monitored connection limits, tested backups, secret rotation procedures, and one controlled migration runner per release.

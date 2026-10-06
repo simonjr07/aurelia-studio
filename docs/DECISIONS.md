@@ -16,7 +16,7 @@ Availability checks improve UX but are stale by nature. Active staff intervals u
 
 ### ADR-004: UTC instants plus an IANA business timezone
 
-Persist actual appointment instants with timezone aware types. Evaluate recurring hours in the configured IANA timezone and return timezone context to clients.
+Persist actual appointment instants with time-zone-aware types. Evaluate recurring hours in the configured IANA time zone and return time-zone context to clients.
 
 ### ADR-005: Preserve operational history
 
@@ -40,7 +40,7 @@ The initial migration enables `btree_gist` and excludes overlapping `[startAt, e
 
 ### ADR-010: Short JWT session plus database backed current identity
 
-Use an eight hour Auth.js JWT containing a narrow identity snapshot, but re read the user on every protected request. This avoids a session table while making account deletion, disablement, and role changes authoritative immediately at the application boundary.
+Use an eight-hour Auth.js JWT containing a narrow identity snapshot, but reread the user on every protected request. This avoids a session table while making account deletion, disablement, and role changes authoritative immediately at the application boundary.
 
 ### ADR-011: One staff login and one protected workspace
 
@@ -58,9 +58,9 @@ Every public service list, detail, and metadata lookup applies both `isPublished
 
 `StaffService` is the deliberate bookability signal for the current schema. An assigned active `STAFF` or `ADMIN` may be named publicly; an administrator is never included merely because of role. Availability rules will add time specific eligibility in TASK-005.
 
-### ADR-015: Development catalogue bootstrap is create only
+### ADR-015: Development catalogue bootstrap is create-only
 
-Keep demo services out of migrations and runtime startup. A dedicated development only command creates missing unique slugs with empty updates, preserving manual edits and refusing production execution.
+Keep demo services out of migrations and runtime startup. A dedicated development-only command creates missing unique slugs with empty updates, preserving manual edits and refusing production execution.
 
 ### ADR-016: Luxon owns wall clock and DST conversion
 
@@ -80,15 +80,15 @@ For the requested instant, sort currently available eligible staff by stable UUI
 
 ### ADR-020: Opaque references and pseudonymous booking throttling
 
-Use `AUR-` plus 96 cryptographically random URL safe bits (20 characters total), retrying the whole transaction on unique collision. Enforce five attempts per 15 minutes for both normalized email and available network identity, persisted only as HMAC SHA256 bucket keys.
+Use `AUR-` plus 96 cryptographically random URL-safe bits (20 characters total), retrying the whole transaction on unique collision. Enforce five attempts per 15 minutes for both normalized email and available network identity, persisted only as HMAC SHA-256 bucket keys.
 
 ### ADR-021: Verify public lookup with reference plus email
 
-Require both the opaque reference and normalized booking email in one POST only lookup. Query both together and return the same failure for unknown reference and wrong email. Keep successful detail in transient page state rather than issuing a customer session for this read only V1.
+Require both the opaque reference and normalized booking email in one POST-only lookup. Query both together and return the same failure for an unknown reference or incorrect email. Keep successful details in transient page state rather than issuing a customer session for this read-only V1.
 
 ### ADR-022: Snapshot backed, not cacheable public detail
 
-Return an explicitly allowed DTO using booking snapshots for service name, duration, price, currency, and timezone. Current staff name is the only related user field. Mark the management route `noindex` and every lookup response private/no-store. Lookup is deliberately read only until cancellation and rescheduling policy is implemented.
+Return an explicitly allowed DTO using booking snapshots for service name, duration, price, currency, and time zone. Current staff name is the only related user field. Mark the management route `noindex` and every lookup response private with `no-store`. Cancellation and rescheduling build on the same verified booking identity.
 
 ### ADR-023: Staff ownership is the appointment resource boundary
 
@@ -96,7 +96,7 @@ Staff may query and mutate only bookings whose `staffId` equals their active dat
 
 ### ADR-024: Explicit state machine with expected state writes
 
-Centralize allowed transitions and require the client’s rendered status as an optimistic concurrency token. Inside one transaction, re read authoritative status, validate it, conditionally update the same status, and create the audit event. Stale requests receive a conflict and cannot create impossible history.
+Centralize allowed transitions and require the client's rendered status as an optimistic concurrency token. Inside one transaction, reread authoritative status, validate it, conditionally update the same status, and create the audit event. Stale requests receive a conflict and cannot create impossible history.
 
 ### ADR-025: Deactivate catalogue and staff records instead of deleting
 
@@ -112,7 +112,7 @@ Accept familiar major unit values such as `85.00`, validate at most two fraction
 
 ### ADR-028: Create/delete local recurring windows
 
-Keep recurring schedules as active `AvailabilityRule` rows measured in minutes after local midnight. Create/delete is clearer and less destructive than whole week replacement. Touching half open windows are valid; overlapping or duplicate active windows are rejected inside serializable transactions.
+Keep recurring schedules as active `AvailabilityRule` rows measured in minutes after local midnight. Separate create and delete operations are clearer and less destructive than whole-week replacement. Touching half-open windows are valid; overlapping or duplicate active windows are rejected inside serializable transactions.
 
 ### ADR-029: Resolve exceptional blocks in the studio timezone
 
@@ -136,10 +136,11 @@ Run the TASK-005 availability adapter inside the change transaction with the cur
 
 ### ADR-034: Editorial public system without a media dependency
 
-Use a restrained ivory/charcoal foundation with sage, clay, stone, and muted gold accents. Pair native editorial serif and clean interface sans stacks so rendering has no font download or build network dependency, keep page structure server first, and express the brand through typography, spacing, linework, and lightweight CSS composition rather than stock imagery or an animation/icon library. Shared `public-*` design primitives define containers, buttons, fields, surfaces, alerts, focus behavior, and reduced motion handling. Public refresh work may improve markup and copy but must not change booking rules, API contracts, authentication, or persistence.
+Use a restrained ivory and charcoal foundation with sage, clay, stone, and muted gold accents. Pair native editorial serif and clean interface sans stacks so rendering has no font-download or build-network dependency. Keep page structure server-first, and express the brand through typography, spacing, linework, and lightweight CSS composition rather than stock imagery or an animation library. Shared `public-*` design primitives define containers, buttons, fields, surfaces, alerts, focus behavior, and reduced-motion handling. Public refresh work may improve markup and copy but must not change booking rules, API contracts, authentication, or persistence.
+
 ### ADR-035: Appointment date, studio local operational analytics
 
-Filter analytics by booking `startAt`, not `createdAt`, using inclusive studio local input dates converted to a half open instant range. Treat status counts as the current state of bookings rather than an event history reconstruction. Daily grouping is performed by parameterized PostgreSQL timezone conversion so UTC midnight boundaries cannot move appointments to the wrong studio day.
+Filter analytics by booking `startAt`, not `createdAt`, using inclusive studio-local input dates converted to a half-open instant range. Treat status counts as the current state of bookings rather than an event-history reconstruction. Daily grouping uses parameterized PostgreSQL time-zone conversion so UTC midnight boundaries cannot move appointments to the wrong studio day.
 
 ### ADR-036: Aggregate only workload analytics without revenue claims
 
@@ -149,13 +150,16 @@ Expose ADMIN only booking/status totals, daily volume, service ranking, and staf
 
 Use a small CSS primitive layer for the authenticated workspace: `admin-shell`, `admin-surface`, `admin-field`, button variants, status badges, focus rings, and responsive page spacing. Keep the public `public-*` system intact and avoid a component library dependency. These primitives standardize interaction states and reduce single use styling without changing route contracts or business behavior.
 
-## Human approval required
+## Open product decisions
 
-| Decision | Options / impact |
-| --- | --- |
-| Studio timezone and default currency | Bootstrap is set by TASK-002 to `America/New_York` and USD; business confirmation is still required before production. |
-| Pending hold expiry | `PENDING` currently occupies capacity. Define its expiry/cleanup policy before public booking creation. |
-| Staff appointment scope | Assigned appointments only, all operational appointments, or configurable permission. |
-| Staff blocked time scope | Own time only versus manager approved broader access. |
-| Data retention | Retention/deletion periods for contact data, audit events, logs, and expired rate limit records. |
-| Opening hours model | Structured child rows are normalized; JSON settings are simpler but harder to constrain/query. |
+### Pending-hold expiry
+
+`PENDING` currently occupies capacity. A future release may add an expiry and cleanup policy.
+
+### Data retention
+
+Retention and deletion periods are still required for contact data, audit events, logs, and expired rate-limit records.
+
+### Opening-hours model
+
+Structured child rows are normalized. JSON settings would be simpler to store but harder to constrain and query.

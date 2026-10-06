@@ -98,10 +98,10 @@ describe("public reschedule transaction queries", () => {
     const findFirst = vi.fn()
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ id: "reference-match" })
-      .mockResolvedValueOnce({ id: "email-match" })
+      .mockResolvedValueOnce({ publicReference: reference })
       .mockResolvedValueOnce({ id: "combined-match" });
     const transaction = {
-      booking: { findFirst },
+      booking: { findFirst, count: vi.fn().mockResolvedValue(1) },
       businessSettings: {
         findUnique: vi.fn().mockResolvedValue({
           rescheduleCutoffMinutes: 240,
@@ -127,6 +127,12 @@ describe("public reschedule transaction queries", () => {
       bookingExistsByEmail: true,
       bookingExistsByCombinedReferenceAndEmail: true,
       transactionStarted: true,
+      storedReferenceEqualsSubmittedReference: true,
+      storedReferenceLength: 20,
+      submittedReferenceLength: 20,
+      storedReferenceStartsWithAur: true,
+      submittedReferenceStartsWithAur: true,
+      bookingsFoundByEmailCount: 1,
     });
     expect(JSON.stringify(log.mock.calls)).not.toContain(reference);
     expect(JSON.stringify(log.mock.calls)).not.toContain(email);
@@ -144,8 +150,9 @@ describe("public reschedule transaction queries", () => {
         findFirst: vi.fn()
           .mockResolvedValueOnce(null)
           .mockRejectedValueOnce(diagnosticError)
-          .mockResolvedValueOnce({ id: "email-match" })
+          .mockResolvedValueOnce({ publicReference: "legacy-reference" })
           .mockResolvedValueOnce(null),
+        count: vi.fn().mockResolvedValue(2),
       },
       businessSettings: {
         findUnique: vi.fn().mockResolvedValue({
@@ -172,6 +179,12 @@ describe("public reschedule transaction queries", () => {
       bookingExistsByEmail: true,
       bookingExistsByCombinedReferenceAndEmail: false,
       transactionStarted: true,
+      storedReferenceEqualsSubmittedReference: false,
+      storedReferenceLength: 16,
+      submittedReferenceLength: 20,
+      storedReferenceStartsWithAur: false,
+      submittedReferenceStartsWithAur: true,
+      bookingsFoundByEmailCount: 2,
       prismaErrorClass: "Error",
       prismaErrorName: "PrismaClientKnownRequestError",
       prismaErrorCode: "P2039",

@@ -46,6 +46,8 @@ describe.skipIf(!hasDatabaseUrl)("availability service", () => {
   }
 
   beforeAll(async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(fixedNow);
     await prisma.user.createMany({
       data: [
         {
@@ -192,6 +194,7 @@ describe.skipIf(!hasDatabaseUrl)("availability service", () => {
       where: { id: { in: [activeStaffId, disabledStaffId, unassignedStaffId] } },
     });
     await prisma.$disconnect();
+    vi.useRealTimers();
   });
 
   it("filters blocking bookings while retaining completed capacity", async () => {

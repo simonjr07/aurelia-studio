@@ -59,17 +59,41 @@ async function logPublicRescheduleVerificationFailure(
     }
   };
   const bookingExistsByReference = await exists({ publicReference: input.reference });
-  const bookingExistsByEmail = await exists({ customerEmail: input.email });
+  let bookingsFoundByEmailCount = 0;
+  try {
+    bookingsFoundByEmailCount = await transaction.booking.count({
+      where: { customerEmail: input.email },
+    });
+  } catch (error) {
+    queryError ??= error;
+  }
+  let bookingByEmail: { publicReference: string } | null = null;
+  try {
+    bookingByEmail = await transaction.booking.findFirst({
+      where: { customerEmail: input.email },
+      select: { publicReference: true },
+    });
+  } catch (error) {
+    queryError ??= error;
+  }
+  const bookingExistsByEmail = Boolean(bookingByEmail);
   const bookingExistsByCombinedReferenceAndEmail = await exists({
     publicReference: input.reference,
     customerEmail: input.email,
   });
+  const storedReference = bookingByEmail?.publicReference ?? "";
 
   console.error("booking_reschedule_verification_diagnostic", {
     bookingExistsByReference,
     bookingExistsByEmail,
     bookingExistsByCombinedReferenceAndEmail,
     transactionStarted: true,
+    storedReferenceEqualsSubmittedReference: storedReference === input.reference,
+    storedReferenceLength: storedReference.length,
+    submittedReferenceLength: input.reference.length,
+    storedReferenceStartsWithAur: storedReference.startsWith("AUR-"),
+    submittedReferenceStartsWithAur: input.reference.startsWith("AUR-"),
+    bookingsFoundByEmailCount,
     ...sanitizedDatabaseError(queryError),
   });
 }

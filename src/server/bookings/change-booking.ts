@@ -23,6 +23,57 @@ function overlapError(error: unknown) {
   return error.code === "P2039" && (cause?.code === "23P01" || cause?.originalCode === "23P01");
 }
 
+function sanitizedDatabaseError(error: unknown) {
+  if (!error || typeof error !== "object") return {};
+  const record = error as {
+    code?: unknown;
+    meta?: { driverAdapterError?: { cause?: { code?: unknown; originalCode?: unknown } } };
+    cause?: { code?: unknown; originalCode?: unknown };
+  };
+  const driverCause = record.meta?.driverAdapterError?.cause ?? record.cause;
+  return {
+    ...(error instanceof Error ? {
+      prismaErrorClass: error.constructor.name,
+      prismaErrorName: error.name,
+    } : {}),
+    ...(typeof record.code === "string" ? { prismaErrorCode: record.code } : {}),
+    ...(typeof driverCause?.originalCode === "string"
+      ? { driverErrorCode: driverCause.originalCode }
+      : typeof driverCause?.code === "string"
+        ? { driverErrorCode: driverCause.code }
+        : {}),
+  };
+}
+
+async function logPublicRescheduleVerificationFailure(
+  transaction: Prisma.TransactionClient,
+  input: { reference: string; email: string },
+) {
+  let queryError: unknown;
+  const exists = async (where: { publicReference?: string; customerEmail?: string }) => {
+    try {
+      return Boolean(await transaction.booking.findFirst({ where, select: { id: true } }));
+    } catch (error) {
+      queryError ??= error;
+      return false;
+    }
+  };
+  const bookingExistsByReference = await exists({ publicReference: input.reference });
+  const bookingExistsByEmail = await exists({ customerEmail: input.email });
+  const bookingExistsByCombinedReferenceAndEmail = await exists({
+    publicReference: input.reference,
+    customerEmail: input.email,
+  });
+
+  console.error("booking_reschedule_verification_diagnostic", {
+    bookingExistsByReference,
+    bookingExistsByEmail,
+    bookingExistsByCombinedReferenceAndEmail,
+    transactionStarted: true,
+    ...sanitizedDatabaseError(queryError),
+  });
+}
+
 const bookingSelect = {
   id: true, publicReference: true, status: true, serviceId: true, staffId: true,
   customerName: true, customerEmail: true, customerPhone: true, customerNote: true,
@@ -57,7 +108,10 @@ export async function reschedulePublicBooking(candidate: unknown, now = new Date
     return await database.$transaction(async (transaction) => {
       const booking = await transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect });
       const settings = await transaction.businessSettings.findUnique({ where: { id: "default" }, select: { rescheduleCutoffMinutes: true, timezone: true } });
-      if (!booking) throw new BookingVerificationError();
+      if (!booking) {
+        await logPublicRescheduleVerificationFailure(transaction, input);
+        throw new BookingVerificationError();
+      }
       if (!mutableStatuses.includes(booking.status)) throw new BookingChangeConflictError("This booking can no longer be rescheduled online.");
       if (booking.status !== input.expectedStatus || booking.startAt.getTime() !== new Date(input.expectedStartAt).getTime()) throw new BookingChangeConflictError();
       if (!settings || !cutoffAllows(now, booking.startAt, settings.rescheduleCutoffMinutes)) throw new BookingPolicyError("Online rescheduling is no longer available for this appointment.");

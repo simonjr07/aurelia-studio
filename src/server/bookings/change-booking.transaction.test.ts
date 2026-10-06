@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import type { PrismaClient } from "../../generated/prisma/client";
-import { BookingVerificationError, reschedulePublicBooking } from "./change-booking";
+import { reschedulePublicBooking } from "./change-booking";
 
 describe("public reschedule transaction queries", () => {
   it("awaits every query on the transaction connection sequentially", async () => {
@@ -92,105 +92,4 @@ describe("public reschedule transaction queries", () => {
     }));
   });
 
-  it("logs only sanitized existence facts when combined verification fails", async () => {
-    const reference = "AUR-0000000000000002";
-    const email = "private@example.test";
-    const findFirst = vi.fn()
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "reference-match" })
-      .mockResolvedValueOnce({ publicReference: reference })
-      .mockResolvedValueOnce({ id: "combined-match" });
-    const transaction = {
-      booking: { findFirst, count: vi.fn().mockResolvedValue(1) },
-      businessSettings: {
-        findUnique: vi.fn().mockResolvedValue({
-          rescheduleCutoffMinutes: 240,
-          timezone: "America/New_York",
-        }),
-      },
-    };
-    const database = {
-      $transaction: vi.fn(async (operation: (client: typeof transaction) => Promise<unknown>) => operation(transaction)),
-    } as unknown as PrismaClient;
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
-    await expect(reschedulePublicBooking({
-      reference,
-      email,
-      expectedStatus: "PENDING",
-      expectedStartAt: "2026-10-20T13:00:00.000Z",
-      startAt: "2026-10-20T16:00:00.000Z",
-    }, new Date("2026-10-01T12:00:00.000Z"), database)).rejects.toBeInstanceOf(BookingVerificationError);
-
-    expect(log).toHaveBeenCalledWith("booking_reschedule_verification_diagnostic", {
-      bookingExistsByReference: true,
-      bookingExistsByEmail: true,
-      bookingExistsByCombinedReferenceAndEmail: true,
-      transactionStarted: true,
-      storedReferenceEqualsSubmittedReference: true,
-      storedReferenceLength: 20,
-      submittedReferenceLength: 20,
-      storedReferenceStartsWithAur: true,
-      submittedReferenceStartsWithAur: true,
-      bookingsFoundByEmailCount: 1,
-    });
-    expect(JSON.stringify(log.mock.calls)).not.toContain(reference);
-    expect(JSON.stringify(log.mock.calls)).not.toContain(email);
-    log.mockRestore();
-  });
-
-  it("logs only sanitized Prisma and driver error metadata from diagnostic probes", async () => {
-    const diagnosticError = Object.assign(new Error("sensitive driver message"), {
-      name: "PrismaClientKnownRequestError",
-      code: "P2039",
-      meta: { driverAdapterError: { cause: { originalCode: "XX000" } } },
-    });
-    const transaction = {
-      booking: {
-        findFirst: vi.fn()
-          .mockResolvedValueOnce(null)
-          .mockRejectedValueOnce(diagnosticError)
-          .mockResolvedValueOnce({ publicReference: "legacy-reference" })
-          .mockResolvedValueOnce(null),
-        count: vi.fn().mockResolvedValue(2),
-      },
-      businessSettings: {
-        findUnique: vi.fn().mockResolvedValue({
-          rescheduleCutoffMinutes: 240,
-          timezone: "America/New_York",
-        }),
-      },
-    };
-    const database = {
-      $transaction: vi.fn(async (operation: (client: typeof transaction) => Promise<unknown>) => operation(transaction)),
-    } as unknown as PrismaClient;
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
-    await expect(reschedulePublicBooking({
-      reference: "AUR-0000000000000003",
-      email: "private@example.test",
-      expectedStatus: "PENDING",
-      expectedStartAt: "2026-10-20T13:00:00.000Z",
-      startAt: "2026-10-20T16:00:00.000Z",
-    }, new Date("2026-10-01T12:00:00.000Z"), database)).rejects.toBeInstanceOf(BookingVerificationError);
-
-    expect(log).toHaveBeenCalledWith("booking_reschedule_verification_diagnostic", {
-      bookingExistsByReference: false,
-      bookingExistsByEmail: true,
-      bookingExistsByCombinedReferenceAndEmail: false,
-      transactionStarted: true,
-      storedReferenceEqualsSubmittedReference: false,
-      storedReferenceLength: 16,
-      submittedReferenceLength: 20,
-      storedReferenceStartsWithAur: false,
-      submittedReferenceStartsWithAur: true,
-      bookingsFoundByEmailCount: 2,
-      prismaErrorClass: "Error",
-      prismaErrorName: "PrismaClientKnownRequestError",
-      prismaErrorCode: "P2039",
-      driverErrorCode: "XX000",
-    });
-    expect(JSON.stringify(log.mock.calls)).not.toContain("sensitive driver message");
-    log.mockRestore();
-  });
 });

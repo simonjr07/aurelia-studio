@@ -18,8 +18,8 @@ describe.skipIf(!hasDatabaseUrl)("booking cancellation and rescheduling", () => 
   const staffB: CurrentUser = { id: ids.staffB, name: "Change Staff B", email: `change-b-${runId}@example.test`, role: "STAFF" };
   let counter = 0;
   const reference = () => `AUR-${(++counter).toString().padStart(16, "0")}`;
-  async function booking(status: BookingStatus, day: number, hour = 13, staffId = ids.staffA) {
-    const ref = reference(); const startAt = new Date(`2026-10-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:00:00Z`);
+  async function booking(status: BookingStatus, day: number, hour = 13, staffId = ids.staffA, publicReference = reference()) {
+    const ref = publicReference; const startAt = new Date(`2026-10-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:00:00Z`);
     return prisma.booking.create({ data: { publicReference: ref, status, serviceId: ids.service, staffId, customerName: "Change Guest", customerEmail: `${ref.toLowerCase()}@example.test`, customerPhone: "+1 555 010 1100", customerNote: "Preserve me", startAt, endAt: new Date(startAt.getTime() + 60 * 60_000), timezoneSnapshot: "America/New_York", serviceNameSnapshot: "Historic Change Service", serviceDurationSnapshot: 60, priceCentsSnapshot: 12345, currencySnapshot: "USD" } });
   }
   const credentials = (item: { publicReference: string; customerEmail: string; status: BookingStatus; startAt: Date }) => ({ reference: item.publicReference, email: item.customerEmail, expectedStatus: item.status as "PENDING" | "CONFIRMED", expectedStartAt: item.startAt.toISOString() });
@@ -60,6 +60,32 @@ describe.skipIf(!hasDatabaseUrl)("booking cancellation and rescheduling", () => 
     expect(result.status).toBe("CONFIRMED"); expect(stored.id).toBe(item.id); expect(stored.publicReference).toBe(item.publicReference); expect(stored.startAt.toISOString()).toBe(target);
     expect(stored).toMatchObject({ serviceNameSnapshot: "Historic Change Service", serviceDurationSnapshot: 60, priceCentsSnapshot: 12345, currencySnapshot: "USD", customerNote: "Preserve me" });
     expect(stored.rescheduleEvents).toHaveLength(1); expect(stored.rescheduleEvents[0].changedByUserId).toBeNull();
+  });
+
+  it("preserves a mixed case reference through reschedule and cancellation", async () => {
+    const mixedCaseReference = "AUR-aBcDeFgHiJkLmN12";
+    const item = await booking("PENDING", 9, 13, ids.staffA, mixedCaseReference);
+    const target = "2026-10-09T16:00:00.000Z";
+    const submittedReference = `  ${mixedCaseReference}  `;
+
+    const rescheduled = await reschedulePublicBooking({
+      ...credentials(item),
+      reference: submittedReference,
+      startAt: target,
+    }, new Date("2026-10-01T12:00:00.000Z"), prisma);
+    expect(rescheduled.reference).toBe(mixedCaseReference);
+
+    const cancelled = await cancelPublicBooking({
+      reference: submittedReference,
+      email: item.customerEmail,
+      expectedStatus: "PENDING",
+      expectedStartAt: target,
+    }, new Date("2026-10-01T12:00:00.000Z"), prisma);
+    expect(cancelled.reference).toBe(mixedCaseReference);
+    await expect(prisma.booking.findUniqueOrThrow({ where: { id: item.id } })).resolves.toMatchObject({
+      publicReference: mixedCaseReference,
+      status: "CANCELLED",
+    });
   });
 
   it("releases capacity after cancellation and moves it after reschedule", async () => {

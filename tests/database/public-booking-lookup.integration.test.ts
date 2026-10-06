@@ -22,7 +22,7 @@ describe.skipIf(!hasDatabaseUrl)("public booking lookup", () => {
   const serviceId = randomUUID();
   const customerEmail = `lookup-${runId}@example.test`;
   const references = {
-    PENDING: "AUR-LOOKUPPENDING001",
+    PENDING: "AUR-LookupPendIng001",
     CONFIRMED: "AUR-LOOKUPCONFIRM001",
     COMPLETED: "AUR-LOOKUPCOMPLETE01",
     CANCELLED: "AUR-LOOKUPCANCELLED1",

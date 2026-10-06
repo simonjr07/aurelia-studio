@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 import { normalizeEmail } from "../auth/validation";
+import { BOOKING_REFERENCE_PATTERN } from "./reference";
 
-const reference = z.string().trim().toUpperCase().regex(/^AUR-[A-Za-z0-9_-]{16}$/);
+const reference = z.string().trim().regex(BOOKING_REFERENCE_PATTERN);
 const email = z.string().trim().max(320).email().transform(normalizeEmail);
 const expectedStatus = z.enum(["PENDING", "CONFIRMED"]);
 

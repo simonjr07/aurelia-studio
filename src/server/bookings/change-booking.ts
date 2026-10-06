@@ -23,81 +23,6 @@ function overlapError(error: unknown) {
   return error.code === "P2039" && (cause?.code === "23P01" || cause?.originalCode === "23P01");
 }
 
-function sanitizedDatabaseError(error: unknown) {
-  if (!error || typeof error !== "object") return {};
-  const record = error as {
-    code?: unknown;
-    meta?: { driverAdapterError?: { cause?: { code?: unknown; originalCode?: unknown } } };
-    cause?: { code?: unknown; originalCode?: unknown };
-  };
-  const driverCause = record.meta?.driverAdapterError?.cause ?? record.cause;
-  return {
-    ...(error instanceof Error ? {
-      prismaErrorClass: error.constructor.name,
-      prismaErrorName: error.name,
-    } : {}),
-    ...(typeof record.code === "string" ? { prismaErrorCode: record.code } : {}),
-    ...(typeof driverCause?.originalCode === "string"
-      ? { driverErrorCode: driverCause.originalCode }
-      : typeof driverCause?.code === "string"
-        ? { driverErrorCode: driverCause.code }
-        : {}),
-  };
-}
-
-async function logPublicRescheduleVerificationFailure(
-  transaction: Prisma.TransactionClient,
-  input: { reference: string; email: string },
-) {
-  let queryError: unknown;
-  const exists = async (where: { publicReference?: string; customerEmail?: string }) => {
-    try {
-      return Boolean(await transaction.booking.findFirst({ where, select: { id: true } }));
-    } catch (error) {
-      queryError ??= error;
-      return false;
-    }
-  };
-  const bookingExistsByReference = await exists({ publicReference: input.reference });
-  let bookingsFoundByEmailCount = 0;
-  try {
-    bookingsFoundByEmailCount = await transaction.booking.count({
-      where: { customerEmail: input.email },
-    });
-  } catch (error) {
-    queryError ??= error;
-  }
-  let bookingByEmail: { publicReference: string } | null = null;
-  try {
-    bookingByEmail = await transaction.booking.findFirst({
-      where: { customerEmail: input.email },
-      select: { publicReference: true },
-    });
-  } catch (error) {
-    queryError ??= error;
-  }
-  const bookingExistsByEmail = Boolean(bookingByEmail);
-  const bookingExistsByCombinedReferenceAndEmail = await exists({
-    publicReference: input.reference,
-    customerEmail: input.email,
-  });
-  const storedReference = bookingByEmail?.publicReference ?? "";
-
-  console.error("booking_reschedule_verification_diagnostic", {
-    bookingExistsByReference,
-    bookingExistsByEmail,
-    bookingExistsByCombinedReferenceAndEmail,
-    transactionStarted: true,
-    storedReferenceEqualsSubmittedReference: storedReference === input.reference,
-    storedReferenceLength: storedReference.length,
-    submittedReferenceLength: input.reference.length,
-    storedReferenceStartsWithAur: storedReference.startsWith("AUR-"),
-    submittedReferenceStartsWithAur: input.reference.startsWith("AUR-"),
-    bookingsFoundByEmailCount,
-    ...sanitizedDatabaseError(queryError),
-  });
-}
-
 const bookingSelect = {
   id: true, publicReference: true, status: true, serviceId: true, staffId: true,
   customerName: true, customerEmail: true, customerPhone: true, customerNote: true,
@@ -132,10 +57,7 @@ export async function reschedulePublicBooking(candidate: unknown, now = new Date
     return await database.$transaction(async (transaction) => {
       const booking = await transaction.booking.findFirst({ where: { publicReference: input.reference, customerEmail: input.email }, select: bookingSelect });
       const settings = await transaction.businessSettings.findUnique({ where: { id: "default" }, select: { rescheduleCutoffMinutes: true, timezone: true } });
-      if (!booking) {
-        await logPublicRescheduleVerificationFailure(transaction, input);
-        throw new BookingVerificationError();
-      }
+      if (!booking) throw new BookingVerificationError();
       if (!mutableStatuses.includes(booking.status)) throw new BookingChangeConflictError("This booking can no longer be rescheduled online.");
       if (booking.status !== input.expectedStatus || booking.startAt.getTime() !== new Date(input.expectedStartAt).getTime()) throw new BookingChangeConflictError();
       if (!settings || !cutoffAllows(now, booking.startAt, settings.rescheduleCutoffMinutes)) throw new BookingPolicyError("Online rescheduling is no longer available for this appointment.");

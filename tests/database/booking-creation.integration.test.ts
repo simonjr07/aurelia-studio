@@ -53,6 +53,8 @@ describe.skipIf(!hasDatabaseUrl)("public booking creation", () => {
   }
 
   beforeAll(async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(fixedNow);
     await prisma.user.createMany({
       data: [
         ...staffIds.map((id, index) => ({
@@ -146,6 +148,7 @@ describe.skipIf(!hasDatabaseUrl)("public booking creation", () => {
       where: { id: { in: [...staffIds, disabledStaffId, unassignedStaffId] } },
     });
     await prisma.$disconnect();
+    vi.useRealTimers();
   });
 
   it("creates a PENDING booking and initial event with authoritative snapshots", async () => {

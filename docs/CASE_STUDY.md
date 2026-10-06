@@ -1,55 +1,93 @@
-# Aurelia Studio: Appointment Booking & Operations Platform
+# Aurelia Studio Case Study
 
-## Overview
+## Project overview
 
-Aurelia Studio is a fictional portfolio application for a premium beauty and wellness business. It demonstrates a polished self service booking journey alongside role aware staff and administrator operations.
+Aurelia Studio is a production-style, full-stack appointment booking and operations platform created for a fictional premium service business. It demonstrates a complete customer booking journey, secure customer self-service, role-aware internal operations, accurate schedule computation, and a verified Vercel and Supabase deployment.
 
-## Problem and solution
+[Open the live application](https://aurelia-studio-orcin.vercel.app)
 
-Scheduling is more than a calendar UI: customers need dependable discovery and booking, while the business needs accurate availability, protected customer information, and auditable changes that remain correct under concurrency. Aurelia Studio combines public service discovery, guided booking, verified booking management, staff appointment workflows, administrator controls, availability management, and privacy conscious operational analytics.
+## Business problem
 
-## Users and key workflows
+A service business needs more than an attractive catalogue. Customers need to understand services, see genuine availability, and confidently manage a booking. Staff need a focused operational view. Administrators need control over the catalogue, team assignments, recurring schedules, exceptions, and reporting.
 
-- **Customers:** discover services, choose a professional or any available professional, select availability, book, and manage a booking with its reference plus email.
-- **Staff:** view and operate on their own appointments and maintain only their own availability.
-- **Administrators:** manage the catalogue, staff, schedules, blocked time, appointments, and aggregate analytics.
+The difficult part is preserving correctness when availability depends on duration, assignment, local business time, blocked periods, existing appointments, policy cutoffs, and simultaneous requests.
 
-## Technical architecture
+## Solution
 
-```mermaid
-flowchart LR
-  B[Browser] --> N[Vercel-hosted Next.js application]
-  N --> S[Auth.js and server side domain services]
-  S --> P[Prisma 7 with adapter-pg]
-  P --> D[(Supabase PostgreSQL)]
-```
+The public experience supports service discovery, professional selection, live availability, booking, confirmation, and verified booking management. Customers can cancel or reschedule eligible bookings without creating an account.
 
-The stack is TypeScript, Next.js App Router, React, Tailwind CSS, Auth.js, Prisma 7, PostgreSQL, Zod, bcrypt, Vitest, Docker Compose, and GitHub Actions. The intended hosted configuration uses a pooled TLS runtime connection and a separate direct TLS migration connection.
+The authenticated workspace gives staff scoped access to their appointments and schedules. Administrators can manage services, staff, assignments, recurring availability, blocked time, appointment workflows, and aggregate analytics.
 
-## Booking integrity
+## User journeys
 
-Bookings use half open intervals, `[startAt, endAt)`. The application rechecks availability in a transaction, validates selected staff and service state, and records immutable service snapshots. PostgreSQL’s GiST exclusion constraint is the final authority for active booking overlaps, so concurrent create/reschedule races cannot silently double book a professional. Expected state and start time prevent stale changes, while audit events retain lifecycle history.
+### Customer
 
-## Security and privacy
+The customer browses published services, chooses a specific professional or any eligible professional, selects an available time, enters contact details, reviews the appointment, and receives an opaque reference. The reference and booking email provide access to a private management view with policy-aware cancellation and rescheduling.
 
-Staff authentication uses Auth.js credentials authentication with bcrypt hashes. Authorization is enforced at server boundaries: ADMIN controls management and analytics, while STAFF scope is tied to the assigned resource. Current user database rechecks promptly remove access for disabled or deleted accounts.
+### Staff
 
-Public booking management requires a high entropy opaque reference plus normalized email. Generic failures limit enumeration, HMAC backed action specific rate limits avoid raw identity persistence, and public DTOs exclude contact details, notes, staff emails, audit data, and authentication data. CSP, framing protection, MIME sniff prevention, referrer controls, and a restrictive permissions policy protect the browser surface.
+Staff can view today's and upcoming appointments, open authorized appointment details, perform valid status transitions, and maintain their own schedule. Server-side scope prevents access to another professional's records.
 
-## Timezone handling and analytics
+### Administrator
 
-Business rules are evaluated in `America/New_York`; timestamps are stored and compared as UTC instants. Availability and analytics cover local day boundaries and DST changes. The dashboard reports bounded operational aggregates, status totals, trends, service ranking, and workload, without customer PII, booking references, rate limit data, or fabricated revenue.
+Administrators can manage the catalogue, staff accounts, service assignments, recurring hours, blocked periods, all appointments, and analytics. Management permissions are enforced at the page, API, and service boundaries.
 
-## QA and deployment
+## Architecture and technical decisions
 
-The verified local suite contains 148 tests across 31 files when PostgreSQL is configured, including database integration coverage for constraints, transactions, role scope, public verification, rate limits, DST, analytics privacy, and concurrent booking/change behavior.
+The application uses Next.js App Router and TypeScript on Vercel, Auth.js for staff authentication, Prisma 7 with `@prisma/adapter-pg`, and Supabase PostgreSQL. Zod validates untrusted input, bcrypt protects staff passwords, Vitest covers application behavior, and GitHub Actions provides repeatable quality gates.
 
-The deployment design is ready for an isolated Aurelia Supabase project and Vercel production deployment from `main`. No production project, URL, database, credentials, migration result, screenshot, or hosted QA result is claimed yet. Hosted smoke testing, responsive/keyboard checks, browser console inspection, and server log review must be recorded from a real environment. See [Deployment](DEPLOYMENT.md).
+Runtime database traffic uses the Supabase transaction pooler. Controlled migration commands use the direct session connection. This separates serverless connection management from schema ownership.
 
-## Challenges and outcome
+Business rules use `America/New_York`; persisted timestamps are UTC instants. Historical service name, duration, price, and currency are copied into booking snapshots so later catalogue edits cannot rewrite appointment history.
 
-The key decisions were keeping availability advisory in the UI while PostgreSQL remains authoritative, handling DST safely, enabling public changes without customer accounts, and separating serverless runtime pooling from migration ownership. The finished codebase demonstrates full stack engineering across relational design, scheduling correctness, RBAC, secure public mutations, responsive UI, testing, and deployment readiness, without presenting fictional business metrics as real outcomes.
+## Booking and availability system
 
-## Limitations and future work
+Availability combines service duration, eligible staff assignments, recurring weekly windows, blocked time, active bookings, lead time, booking horizon, slot interval, and local time zone rules. Results shown in the interface are advisory until a booking transaction commits.
 
-V1 has no payments, customer accounts, SMS/email notifications, MFA, password reset, CAPTCHA, multiple location support, edge/WAF abuse controls, or formal accessibility certification. A real deployment should also add operational monitoring, backup restoration drills, and professional security/accessibility assessment appropriate to its audience.
+Create and reschedule operations recheck current state inside a transaction. Booking intervals follow half-open `[start, end)` semantics. A PostgreSQL GiST exclusion constraint is the final authority against overlapping active bookings, including concurrent requests. Expected status and expected start time protect customer changes from stale submissions.
+
+## Admin and staff workflows
+
+Appointments move through an explicit state machine with actor-aware audit events. Staff remain restricted to their assigned work, while administrators can operate across the studio. Service and staff deactivation preserves historical records. Assignment replacement is transactional, and schedule edits feed directly into public availability.
+
+Analytics provide bounded date presets and custom ranges, current status totals, studio-local trends, popular services, and staff workload. Responses are aggregate allow lists with no customer contact details, booking references, notes, or fabricated revenue.
+
+## Reliability and concurrency
+
+The design uses validation, transactional rechecks, optimistic stale state inputs, database uniqueness, and exclusion constraints together. Tests exercise create races, reschedule races, cancellation versus reschedule races, adjacent intervals, terminal status behavior, and rollback paths against PostgreSQL rather than relying only on mocks.
+
+## Security
+
+Auth.js credentials authentication uses bcrypt and an eight-hour JWT lifetime. Protected operations recheck the active database user so disabled or deleted accounts lose access. ADMIN and STAFF permissions are enforced server-side.
+
+Public booking management requires the exact case-sensitive reference and normalized email on every request. Generic verification failures reduce enumeration clues. Login, booking creation, lookup, cancellation, and rescheduling use isolated HMAC-based rate-limit buckets without storing raw identifiers. Explicit DTOs, input bounds, `no-store` responses, `noindex` private pages, CSP, and browser security headers further reduce exposure.
+
+Secrets are held in provider environment storage. No database URL, authentication secret, rate limit secret, password, or token is committed or included in screenshots.
+
+## Production deployment
+
+The application is live at [aurelia-studio-orcin.vercel.app](https://aurelia-studio-orcin.vercel.app). Vercel hosts the Next.js application, and Supabase hosts PostgreSQL. Committed Prisma migrations were applied through the controlled direct connection before hosted QA.
+
+Hosted QA verified public service browsing, availability, booking creation, lookup, rescheduling, cancellation, administrator login, appointment workflows, responsive layouts, keyboard focus, protected routes, and booking access through the reference and email. Customer changes appeared correctly in the administrator workspace.
+
+## Testing
+
+The final automated suite contains **151 passing tests across 32 files** with the PostgreSQL integration suites active. Coverage includes validation, authentication, authorization, time zones, DST, availability, database constraints, public booking, change policies, rate limiting, analytics, and concurrent writes.
+
+The release gates also passed lint, TypeScript checking, the optimized production build, and Git whitespace validation. Manual hosted checks complemented the automated suite for responsive behavior, focus visibility, authentication boundaries, private booking access, and production workflow integration.
+
+## Production debugging case study
+
+Hosted QA uncovered a focused booking change defect: public lookup succeeded, but rescheduling and cancellation could reject the same valid reference and email.
+
+The request payload and expected booking state were first verified. Minimal server-only diagnostics then isolated reference-only, email-only, and combined matching without logging either credential. The evidence showed that the email matched, but the submitted reference no longer equaled the stored reference.
+
+References are generated with URL-safe base64, which is case-sensitive and may contain uppercase and lowercase characters. Lookup validation preserved that case, while booking-change validation called `.toUpperCase()`. That mutation changed a valid identifier before the transactional query.
+
+The fix removed the case conversion, reused the shared `BOOKING_REFERENCE_PATTERN`, preserved exact reference and email verification, and left the generator and stored references unchanged. Regression coverage now exercises a deliberately mixed-case reference through lookup, rescheduling, and cancellation. The temporary diagnostics were removed after confirmation.
+
+## Final outcome
+
+Aurelia Studio now provides a coherent production deployment and a technically credible portfolio example across front-end design, relational modeling, scheduling logic, concurrency control, authentication, authorization, security hardening, testing, deployment, and real hosted debugging.
+
+The project does not claim real customers, revenue, performance benchmarks, formal penetration testing, or accessibility certification. It remains a fictional portfolio application backed by real implementation and verification evidence.

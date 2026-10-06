@@ -1,119 +1,119 @@
 # Aurelia Studio
 
-Aurelia Studio is a fictional premium beauty and wellness studio, built as a production style appointment platform for public booking and role aware staff operations.
+Aurelia Studio is a production-style, full-stack appointment booking and operations platform for a fictional premium service business. It combines a polished customer journey with real availability computation, secure customer self-service, staff operations, administrator controls, and privacy-conscious analytics.
 
-The completed product includes the Task 011.5 public experience refresh, Task 012 dashboard analytics, Task 013 front end polish, and Task 014 security hardening; Task 015 deployment evidence remains deliberately pending real Vercel and Supabase work.
+**Live application:** [aurelia-studio-orcin.vercel.app](https://aurelia-studio-orcin.vercel.app)
+
+**Case study:** [docs/CASE_STUDY.md](docs/CASE_STUDY.md)
 
 ## The problem
 
-Appointment scheduling is deceptively complex: customers need a clear booking journey, staff need reliable daily operations, and availability must remain correct through time zones, concurrent requests, cancellations, and reschedules. Aurelia Studio demonstrates a focused solution without inventing revenue or customer impact claims for a fictional business.
+Appointment scheduling is more than a calendar interface. Customers need a clear path from service discovery to a confirmed appointment. Staff need reliable daily operations. Administrators need control over services, assignments, schedules, blocked time, and reporting. Every path must remain correct through time zones, concurrent requests, cancellations, and reschedules.
+
+Aurelia Studio demonstrates that complete workflow without inventing business metrics or presenting the fictional studio as a real operating company.
 
 ## Key capabilities
 
-- Public service discovery, availability, guided booking, and confirmation
-- Verified reference plus email booking lookup, cancellation, and rescheduling
-- Staff appointment workflows and own schedule controls
-- ADMIN controls for services, staff, availability, blocked time, and analytics
-- Timezone aware scheduling with transactional checks and PostgreSQL conflict authority
-- Responsive, accessible public and internal interfaces
-
-The project currently includes the **Task 011.5 public experience refresh**, **Task 012 dashboard analytics workflow**, and **Task 013 front end polish**: a cohesive responsive studio identity across discovery, booking, confirmation, and verified booking management, backed by the complete Task 011 transactional workflow, plus privacy conscious operational analytics and a refined accessible internal workspace.
-
-The public interface uses a restrained ivory, charcoal, sage, and clay palette; an editorial display face paired with a readable interface sans; shared controls and surface styles; responsive navigation; explicit selected/loading/empty/error states; and reduced motion aware transitions. This presentation layer does not alter booking policies, API contracts, authentication, or persistence behavior.
+1. Public service catalogue, professional selection, availability, booking, and confirmation
+2. Secure booking lookup using an opaque reference plus the booking email
+3. Customer cancellation and rescheduling with policy cutoffs and stale-state protection
+4. Staff appointment views, details, status workflows, and scoped schedule management
+5. Administrator management for services, staff, assignments, recurring availability, and blocked time
+6. Administrator analytics with bounded date ranges, status summaries, trends, popular services, and staff workload
+7. Responsive public and internal interfaces with keyboard focus, reduced-motion support, and accessible text equivalents
 
 ## Architecture and stack
 
 ```mermaid
 flowchart LR
-  U[Customers, staff, and administrators] --> V[Vercel / Next.js App Router]
-  V --> A[Auth.js and server side application services]
-  A --> P[Prisma 7 + adapter-pg]
-  P --> D[(PostgreSQL / Supabase in production)]
+  U[Customers, staff, and administrators] --> V[Vercel and Next.js App Router]
+  V --> A[Auth.js and server domain services]
+  A --> P[Prisma 7 with adapter pg]
+  P --> D[(Supabase PostgreSQL)]
 ```
 
-The stack is TypeScript, Next.js, React, Tailwind CSS, Auth.js, Prisma 7 with `@prisma/adapter-pg`, PostgreSQL, Zod, bcrypt, Vitest, Docker Compose, and GitHub Actions.
+The application uses TypeScript, Next.js, React, Tailwind CSS, Auth.js, Prisma 7 with `@prisma/adapter-pg`, PostgreSQL, Zod, bcrypt, Vitest, Docker Compose, GitHub Actions, Vercel, and Supabase.
 
 ## Engineering highlights
 
-- Booking intervals use `[start, end)` semantics. Application transactions re check current availability and PostgreSQL GiST exclusion constraints remain the final concurrent write defense.
-- Booking snapshots preserve historical service details while staff/services evolve. Status and reschedule events provide an audit trail.
-- Auth.js credentials authentication uses bcrypt, role aware server authorization, and current user database rechecks for disablement/deletion.
-- Public booking management requires an opaque high entropy reference plus normalized email. Sensitive responses are no-store and action specific rate limits persist only HMAC identities.
-- Studio local business rules use `America/New_York`; instants are stored and compared in UTC. Analytics intentionally expose operational aggregates rather than invented revenue.
-- Production hardening includes CSP and browser security headers, explicit DTOs, bounded inputs, and no raw database failures in public responses.
+Booking intervals use half-open `[start, end)` semantics. Candidate availability is computed from service duration, staff assignments, recurring windows, blocked time, existing bookings, lead time, booking horizon, and the studio time zone.
 
-## Testing
+Every booking write rechecks authoritative state inside a transaction. A PostgreSQL GiST exclusion constraint remains the final defense against overlapping active bookings, including concurrent creation and rescheduling. Historical service details are stored as booking snapshots, while status and reschedule events provide an audit trail.
 
-`npm test` currently runs **148 tests across 31 files** when PostgreSQL is configured. The suite includes real PostgreSQL integration coverage for migrations, exclusion constraints, public booking flows, authorization scope, analytics boundaries, DST behavior, and concurrent booking/change races.
+Auth.js credentials authentication uses bcrypt hashes and server-enforced ADMIN and STAFF boundaries. Public booking management requires the exact case-sensitive reference and normalized email. Generic failures, action-specific rate limits, bounded validation, explicit public DTOs, private response controls, CSP, and browser security headers reduce exposure.
+
+Studio rules use `America/New_York`, while instants are stored and compared in UTC. Analytics use studio-local date boundaries and expose operational aggregates rather than customer PII or fabricated revenue.
+
+## Testing and production quality
+
+The final suite contains **151 passing tests across 32 files** with PostgreSQL configured. It includes unit coverage and real database integration coverage for migrations, constraints, availability, booking creation, public verification, cancellation, rescheduling, authorization, analytics, DST behavior, and concurrency.
+
+The mixed case booking reference regression is covered through public lookup, rescheduling, and cancellation. Hosted QA also verified the main public and authenticated workflows, responsive layouts, keyboard focus, protected routes, and safe public verification behavior.
 
 ```bash
 npm test
 npm run lint
 npm run typecheck
 npm run build
+git diff --check
 ```
 
-See [the testing strategy](docs/TESTING.md) for coverage and hosted QA status.
+See [docs/TESTING.md](docs/TESTING.md) for the complete test and QA record.
 
 ## Production deployment
 
-The intended production architecture is Vercel plus an isolated Aurelia Supabase PostgreSQL project. `DATABASE_URL` is a pooled TLS runtime connection; `DIRECT_URL` is a direct TLS connection reserved for controlled Prisma migrations. Migrations run once with `npm run db:deploy`, never via `db push` or application startup.
+The application is deployed on Vercel with Supabase PostgreSQL. Runtime traffic uses a pooled TLS connection, while controlled Prisma migrations use a direct session connection. Secrets remain in provider environment storage and are not committed to the repository.
 
-No hosted environment, production URL, or screenshots are claimed in this repository yet. The exact deployment, production bootstrap, rollback, and verification runbook is in [Deployment](docs/DEPLOYMENT.md).
+Deployment, migration, rollback, and hosted verification details are recorded in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## Case study and screenshots
+## Selected screenshots
 
-The [case study](docs/CASE_STUDY.md) explains the product and engineering decisions without representing Aurelia as a real client. [Screenshot evidence](docs/SCREENSHOTS.md) is deliberately marked pending until captured from a verified hosted build with fictional data.
+### Public home
+![Aurelia Studio editorial home page](docs/screenshots/home-desktop.png)
+
+
+### Service details
+![Service details and booking entry point](docs/screenshots/service-details-desktop.png)
+
+### Administrator overview
+![Aurelia Studio administrator overview](docs/screenshots/admin-overview-desktop.png)
+
+### Mobile service catalogue
+![Responsive mobile service catalogue](docs/screenshots/services-mobile.png)
+
+The complete curated set is documented in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).
 
 ## Local development
 
-Requires Node.js 20.9 or newer and Docker Compose. Local PostgreSQL uses host port `5434`.
+Node.js 20.9 or newer and Docker Compose are required. Local PostgreSQL uses host port `5434`.
 
 ```bash
 npm install
-Copy-Item .env.example .env # PowerShell; keep .env uncommitted
+Copy-Item .env.example .env
 docker compose up -d db
 npm run db:migrate
 npm run db:smoke
-npm run db:bootstrap:services # create missing development catalogue entries
-npm run db:bootstrap:booking-demo # optional create only staff/schedule demo data
-# Optionally set WORKFLOW_ADMIN_PASSWORD, WORKFLOW_STAFF_A_PASSWORD, and
-# WORKFLOW_STAFF_B_PASSWORD, then create appointment workflow QA fixtures:
-npm run db:bootstrap:appointment-workflow
-# Add development AUTH_SECRET and RATE_LIMIT_SECRET values to .env.
-# Then provide ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD in your shell:
-npm run admin:provision
+npm run db:bootstrap:services
+npm run db:bootstrap:booking-demo
 npm run dev
 ```
 
+Add development values for `AUTH_SECRET` and `RATE_LIMIT_SECRET` to the uncommitted `.env` file. Administrator provisioning reads credentials from the shell and never prints the supplied password.
+
 Open [http://localhost:3000](http://localhost:3000).
-
-## Quality commands
-
-```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-```
-
-Database commands are available as `db:generate`, `db:migrate`, `db:deploy`, `db:status`, `db:bootstrap`, `db:bootstrap:services`, `db:bootstrap:booking-demo`, `db:smoke`, and `db:studio`. Both catalogue/demo bootstraps are development only and create missing data without overwriting existing records. Demo staff receive random, undisclosed credential material and are for scheduling QA, not sign in. `admin:provision` creates the first active administrator without printing the supplied password.
 
 ## Documentation
 
-- [Product requirements](docs/PRODUCT_REQUIREMENTS.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Database design](docs/DATABASE.md)
-- [API conventions](docs/API.md)
-- [Task roadmap](docs/TASKS.md)
-- [Architecture decisions](docs/DECISIONS.md)
-- [Testing strategy](docs/TESTING.md)
-- [Security](docs/SECURITY.md)
-- [Deployment](docs/DEPLOYMENT.md)
-- [Definition of done](docs/DEFINITION_OF_DONE.md)
-- [Case study plan](docs/CASE_STUDY.md)
-- [Screenshot plan](docs/SCREENSHOTS.md)
+1. [Case study](docs/CASE_STUDY.md)
+2. [Architecture](docs/ARCHITECTURE.md)
+3. [Database design](docs/DATABASE.md)
+4. [API conventions](docs/API.md)
+5. [Testing strategy and evidence](docs/TESTING.md)
+6. [Security baseline](docs/SECURITY.md)
+7. [Deployment record](docs/DEPLOYMENT.md)
+8. [Screenshot evidence](docs/SCREENSHOTS.md)
+9. [Task roadmap](docs/TASKS.md)
 
 ## Status
 
-Database, public booking, verified customer changes, scoped appointment operations, admin management, schedule management, analytics, front end polish, and security hardening are implemented. Production deployment, hosted QA, screenshots, and final deployment evidence are pending real Vercel/Supabase account access and must not be inferred from local validation.
+Database design, public booking, verified customer changes, staff appointment operations, administrator management, schedule management, analytics, responsive front-end polish, security hardening, production deployment, hosted QA, screenshots, and portfolio documentation are complete.

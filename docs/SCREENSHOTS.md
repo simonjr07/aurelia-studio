@@ -1,49 +1,69 @@
-# Screenshot Plan
+# Screenshot Evidence
 
-Screenshots will be captured after each represented feature is implemented and verified. Use synthetic names/contact details, no credentials or session data, and a consistent seeded dataset.
+The curated screenshot set was captured from the live Aurelia Studio application using fictional portfolio data. No image contains a password, token, booking credential, environment value, database URL, developer tool, private log, or real customer information.
 
-## Planned set
+The screenshots are stored as their original PNG bytes without additional recompression.
 
-| Area | View / state | Widths |
-| --- | --- | --- |
-| Brand | Homepage | Mobile, desktop |
-| Services | List and detail | Mobile, desktop |
-| Booking | Staff choice, date/time, details, review, confirmation | Mobile, desktop key steps |
-| Public management | Lookup, booking detail, reschedule, cancellation | Mobile |
-| Staff | Today, upcoming, calendar, appointment detail | Tablet, desktop |
-| Admin | Services, staff, hours/rules, blocked time, analytics | Desktop |
-| Quality | Empty, validation, stale slot/conflict, forbidden, error | Relevant width |
-| Accessibility | Visible focus and zoom/reflow evidence | Desktop/mobile |
+## Curated set
 
-## Capture standards
+### `home-desktop.png`
 
-- Use a stable hosted preview or production build with deterministic seed data.
-- Capture the entire relevant component without browser/private account clutter.
-- Use descriptive filenames such as `booking-time-mobile.png` and maintain useful alt text/captions.
-- Keep color/profile and viewport consistent across comparison images.
-- Redact or recapture rather than blur real PII; never include secrets, URLs containing tokens, logs, or developer tools with sensitive values.
-- Record the build/commit and viewport used so images can be reproduced.
-- Remove outdated images when UI behavior materially changes.
+Public home at 1893 × 872. Shows the editorial brand direction, clear service discovery, and booking-management entry points.
 
-## Curated capture list
+### `services-desktop.png`
 
-When a verified hosted environment is available, capture these portfolio views with fictional data only:
+Public catalogue at 1893 × 878. Shows published service discovery, duration presentation, responsive navigation, and the catalogue layout.
 
-1. `01-home-desktop.png`: homepage at 1440px
-2. `02-services.png`: public catalogue
-3. `03-service-detail.png`: service detail
-4. `04-booking-flow.png`: professional/date/time selection
-5. `05-booking-confirmation.png`: confirmation without contact details
-6. `06-manage-booking.png`: verified booking view without credentials
-7. `07-admin-overview.png`: administrator overview
-8. `08-appointment-detail.png`: appointment workflow/audit view
-9. `09-service-management.png`: catalogue management
-10. `10-availability-management.png`: recurring/blocked time management
-11. `11-analytics.png`: aggregate analytics
-12. `12-home-mobile.png`: homepage at approximately 390px
+### `service-details-desktop.png`
 
-Optional staff management and mobile admin views may be added only when they meet the same standard. Record the real deployed commit and viewport alongside the capture set; embed only a small best of selection in the README.
+Service details at 1893 × 873. Shows the service description, eligible professional, authoritative duration and price snapshot, and booking entry point.
 
-## Current status
+### `manage-booking-desktop.png`
 
-No screenshots have been captured or added under `docs/screenshots/`. Hosted account access and a verified deployment were unavailable during Task #15 preparation, so this is an honest capture checklist rather than fabricated portfolio evidence.
+Public booking lookup at 1900 × 866. Shows private reference and email verification with supporting security guidance.
+
+### `manage-booking-mobile.png`
+
+Public booking lookup at 330 × 712. Shows responsive form layout, labels, tap targets, and mobile navigation.
+
+### `services-mobile.png`
+
+Public catalogue at 328 × 716. Shows responsive service cards, readable content hierarchy, and mobile calls to action.
+
+### `admin-overview-desktop.png`
+
+Administrator overview at 1894 × 872. Shows the protected operations shell, role presentation, active navigation, and workload summary.
+
+### `admin-appointments-desktop.png`
+
+Administrator appointments at 1890 × 876. Shows appointment navigation, today and upcoming modes, and a purposeful empty state.
+
+### `admin-availability-desktop.png`
+
+Administrator availability at 1918 × 873. Shows staff schedule selection, recurring-window counts, active status, and fictional demo identities.
+
+## Selected previews
+
+### Public home
+
+![Desktop Aurelia Studio home page](screenshots/home-desktop.png)
+
+### Public booking entry
+
+![Desktop service details and booking entry point](screenshots/service-details-desktop.png)
+
+### Administrator workspace
+
+![Desktop administrator overview](screenshots/admin-overview-desktop.png)
+
+### Mobile public experience
+
+![Mobile Aurelia Studio service catalogue](screenshots/services-mobile.png)
+
+## Capture notes
+
+The final set intentionally favors representative product surfaces over an exhaustive gallery. It replaces the earlier twelve image planning checklist. The supplied captures show home, catalogue, service booking entry, booking management, administrator overview, appointments, availability, and mobile responsive behavior.
+
+The supplied set does not include analytics or appointment-detail images. Those capabilities are supported by implementation, automated tests, and hosted QA rather than substituted screenshots.
+
+Any future screenshot refresh should use fictional data, preserve the same privacy standard, record the live build being represented, and recapture rather than blur questionable information.

@@ -1,14 +1,14 @@
 # API and Server Interface Conventions
 
-TASK-007 adds private read only booking verification at `/api/bookings/lookup` alongside availability and booking creation.
+The application exposes narrow HTTP interfaces for public booking workflows and authenticated operations. Server Components query internal read boundaries directly when a public JSON contract is unnecessary.
 
-TASK-008 adds authenticated `POST /api/admin/appointments/[id]/status`. Its strict body is `{ expectedStatus, status, note? }`. The active database backed actor is resolved on every request; staff scope is enforced by booking ownership and admins are unscoped. Invalid bodies return `400`, missing authentication `401`, missing/out of scope appointments `404`, stale or forbidden transitions `409`, and unexpected failures a generic `500`.
+Authenticated `POST /api/admin/appointments/[id]/status` accepts the strict body `{ expectedStatus, status, note? }`. The active database-backed actor is resolved on every request. Staff scope is enforced by booking ownership, while administrators are unscoped. Invalid bodies return `400`, missing authentication returns `401`, missing or out-of-scope appointments return `404`, stale or forbidden transitions return `409`, and unexpected failures return a generic `500`.
 
-TASK-009 adds administrator only `POST /api/admin/services`, `PATCH /api/admin/services/[id]`, `POST /api/admin/staff`, `PATCH /api/admin/staff/[id]`, and `PUT /api/admin/staff/[id]/services`. Each re resolves the active database backed user and returns `401` unauthenticated or `403` non admin before parsing/mutation. Validation failures are `400`, unique slug/email conflicts `409`, missing managed resources `404`, and unexpected failures a generic `500`. Responses never contain password hashes or plaintext passwords.
+Administrator-only management uses `POST /api/admin/services`, `PATCH /api/admin/services/[id]`, `POST /api/admin/staff`, `PATCH /api/admin/staff/[id]`, and `PUT /api/admin/staff/[id]/services`. Each route reloads the active database-backed user and returns `401` for missing authentication or `403` for a non-administrator before parsing or mutation. Validation failures return `400`, unique slug or email conflicts return `409`, missing managed resources return `404`, and unexpected failures return a generic `500`. Responses never contain password hashes or plaintext passwords.
 
-TASK-010 adds authenticated `POST /api/admin/availability`, `DELETE /api/admin/availability/[id]`, `POST /api/admin/blocked-times`, and `DELETE /api/admin/blocked-times/[id]`. ADMIN may target any STAFF account; STAFF may target only themselves. Cross scope or missing resources return `404`, validation returns `400`, overlaps/disabled targets return `409`, missing studio configuration returns `503`, and unexpected errors remain generic. Responses expose only schedule identifiers and never blocked reasons beyond the authorized internal page.
+Schedule management uses authenticated `POST /api/admin/availability`, `DELETE /api/admin/availability/[id]`, `POST /api/admin/blocked-times`, and `DELETE /api/admin/blocked-times/[id]`. ADMIN may target any STAFF account, while STAFF may target only themselves. Cross-scope or missing resources return `404`, validation returns `400`, overlaps or disabled targets return `409`, missing studio configuration returns `503`, and unexpected errors remain generic. Responses expose only schedule identifiers and never reveal blocked-time reasons beyond the authorized internal page.
 
-TASK-011 adds verified `POST /api/bookings/cancel`, `POST /api/bookings/reschedule`, and authenticated `POST /api/admin/appointments/[id]/reschedule`. Public changes require reference plus normalized email on every request. Validation is `400`, generic verification/missing scope is `404`, stale state or occupied capacity is `409`, cutoff/state policy is `422`, throttling is `429`, and unexpected failures are generic `500` responses.
+Booking changes use verified `POST /api/bookings/cancel`, `POST /api/bookings/reschedule`, and authenticated `POST /api/admin/appointments/[id]/reschedule`. Public changes require the booking reference and normalized email on every request. Validation failures return `400`, generic verification or missing scope returns `404`, stale state or occupied capacity returns `409`, cutoff or state policy returns `422`, throttling returns `429`, and unexpected failures return a generic `500`.
 
 ## Interface choice
 
@@ -16,16 +16,31 @@ TASK-011 adds verified `POST /api/bookings/cancel`, `POST /api/bookings/reschedu
 - Use **Route Handlers** under `/api` for public retrieval/mutation contracts, callbacks, or endpoints that benefit from normal HTTP semantics.
 - Both are thin adapters over the same application use cases; neither contains booking policy or raw ad hoc database logic.
 
-## Planned public surface
+## Interface overview
 
-| Capability | Likely interface | Notes |
-| --- | --- | --- |
-| List/view active services | Server Component query or `GET /api/services` | Public fields only |
-| Query availability | `GET /api/availability` | One date; validated; dynamic; advisory |
-| Create booking | `POST /api/bookings` | Implemented: revalidates and enforces conflict atomically |
-| Retrieve public booking | `POST /api/bookings/lookup` | Implemented: reference plus normalized email; rate limited |
-| Reschedule/cancel | `POST /api/bookings/reschedule` and `/api/bookings/cancel` | Implemented: verification, policy, audit, transaction |
-| Staff/admin operations | Authenticated Route Handlers | Implemented for appointments and service/staff management |
+### Active services
+
+Server Components query the internal public-service boundary and expose public fields only. No separate JSON service endpoint is required.
+
+### Availability
+
+`GET /api/availability` accepts one validated date and returns dynamic, advisory availability.
+
+### Booking creation
+
+`POST /api/bookings` revalidates availability and enforces booking conflicts atomically.
+
+### Public booking lookup
+
+`POST /api/bookings/lookup` verifies the booking reference and normalized email and applies rate limiting.
+
+### Public booking changes
+
+`POST /api/bookings/reschedule` and `POST /api/bookings/cancel` enforce verification, policy, audit, and transaction boundaries.
+
+### Staff and administrator operations
+
+Authenticated route handlers support appointment operations and service, staff, and schedule management.
 
 ## Implemented public service interface
 
@@ -55,7 +70,7 @@ The `200` DTO contains reference, enum/friendly status, booking snapshot service
 
 ## Implemented booking change interfaces
 
-`POST /api/bookings/cancel` accepts `{ reference, email, expectedStatus, expectedStartAt }`. It re verifies the customer, re reads current state in a transaction, applies the configured cancellation cutoff, conditionally changes the status to `CANCELLED`, and appends an actorless status event.
+`POST /api/bookings/cancel` accepts `{ reference, email, expectedStatus, expectedStartAt }`. It re-verifies the customer, rereads current state in a transaction, applies the configured cancellation cutoff, conditionally changes the status to `CANCELLED`, and appends an actorless status event.
 
 `POST /api/bookings/reschedule` accepts the same verification and stale state fields plus `{ startAt, staffId? }`. It applies the configured reschedule cutoff, re runs availability using the booking's snapshot duration while excluding the booking itself, updates that same booking row, and appends an actorless reschedule event. Omitting `staffId` uses deterministic Any available selection.
 
@@ -76,7 +91,7 @@ The `200` DTO contains reference, enum/friendly status, booking snapshot service
 - Use ISO 8601 timestamps with offsets/`Z` plus an explicit IANA timezone where local meaning matters.
 - Use consistent errors with a stable machine code, safe user message, and optional field errors/correlation ID. Never expose stack traces, SQL, account existence, or conflict details about other customers.
 - Use appropriate HTTP status codes: `400` malformed input, `401` unauthenticated, `403` unauthorized, `404` unavailable/hidden resource, `409` stale state or booking conflict, `422` valid shape but rejected policy, and `429` rate limited.
-- Mutations authenticate/verify, authorize, validate current state, and write audit information server side.
+- Mutations verify identity, authorize the action, validate current state, and write audit information server-side.
 - Use opaque idempotency keys for retry prone public booking creation if the delivery design can submit twice.
 - Apply pagination and upper bounds to lists and availability windows.
 - Do not cache user specific or staff operational data publicly. Invalidate catalog/schedule data after mutations.

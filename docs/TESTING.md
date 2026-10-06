@@ -1,97 +1,116 @@
-# Testing Strategy
+# Testing Strategy and Evidence
 
-Vitest is the test runner. Tests should target behavior at the cheapest reliable layer; critical database invariants also need real PostgreSQL integration tests. Browser journeys will be added when customer and internal flows exist.
+## Overview
 
-## Test layers
+Aurelia Studio uses Vitest for automated testing and PostgreSQL for integration tests that depend on real database behavior. The final verified suite contains **151 passing tests across 32 files**, with every PostgreSQL suite active.
 
-- **Unit:** Zod validation, pure authorization policy, status transitions, cancellation rules, timezone conversion, and slot generation.
-- **Component:** accessible form states, calendars/time selection, error messaging, and role sensitive controls where UI behavior warrants it.
-- **Repository integration:** Prisma against disposable PostgreSQL for query mapping, transactions, migrations, constraints, and indexes.
-- **Application integration:** authenticated use cases with real repositories at important boundaries.
-- **End to end:** public discovery/booking/manage flow and staff/admin workflows in a production like build.
+Tests are placed at the least expensive layer that can prove the required behavior. Pure policies and transformations use unit tests. Transactions, constraints, authorization scope, and concurrency use the real database. Hosted QA covers complete browser journeys, responsive behavior, and keyboard interaction.
 
-Mock external boundaries and clocks, not the scheduling rules under test. Use factories with explicit times and timezones; avoid fixtures that depend on the machine’s locale or current date.
+## Automated test layers
 
-## Required coverage by risk
+### Unit tests
 
-- **Validation:** malformed, missing, normalized, boundary, and unexpected input.
-- **Authentication:** correct/incorrect credentials, inactive users, secure session shape, logout, and generic errors.
-- **Authorization:** every protected mutation for public/staff/admin plus resource ownership/scope; directly call server entry points rather than testing navigation alone.
-- **Slot generation:** duration/buffers, opening and staff windows, blocks, active bookings, interval alignment, lead time, horizon, “Any available,” and no partial fit slots.
-- **Timezone:** UTC offsets, local date boundaries, ambiguous/nonexistent daylight saving times using representative IANA zones, and configured studio timezone changes.
-- **Double booking:** simultaneous create/create and create/reschedule conflicts, adjacent not overlapping intervals, transaction rollback, and constraint to domain error mapping.
-- **Rescheduling:** policy cutoff, same/new staff, stale state, conflict, audit lineage, and atomicity.
-- **Cancellation:** role/customer permissions, cutoff/override, already terminal booking, released availability, and event history.
-- **Status transitions:** valid matrix plus forbidden transitions and repeated requests.
-- **Public booking:** service through confirmation and management lookup, including unavailable/stale slot and rate limit paths.
-- **Permissions:** staff scope cannot reach admin management or data outside policy; administrators can perform intended actions.
-- **Analytics:** validate bounded studio local ranges and DST transitions; use real PostgreSQL fixtures for current status totals, local day bucketing, service ranking, disabled staff workload, deterministic ties, authorization, and DTO privacy.
+Unit coverage includes:
 
-## Quality gates
+1. Zod validation and normalization
+2. Authentication and authorization policies
+3. Appointment status transitions
+4. Booking references and rate limits
+5. Time-zone conversion and daylight saving boundaries
+6. Slot generation, lead time, booking horizon, and interval alignment
+7. Analytics date ranges and formatting
+8. Production security header configuration and trusted network identity handling
 
-Pull requests run install, lint, typecheck, tests, and production build. Feature work must include regression tests proportional to risk. Coverage percentages may be monitored, but meaningful boundary and concurrency cases are the gate, not a percentage alone. Accessibility needs automated scans plus manual keyboard and screen reader spot checks. Hosted QA is required before production completion.
+Clocks and external boundaries are controlled in tests. Scheduling rules are not mocked, and date-sensitive tests use explicit times rather than the machine clock.
 
-## Current state
+### PostgreSQL integration tests
 
-TASK-005 adds pure slot engine coverage for duration, interval grid alignment, merged windows, gaps, half open blocks, lead time and horizon boundaries, spring forward gaps, fall back ambiguity, unique instants, and shared blocking statuses. Live PostgreSQL/API coverage verifies service visibility, active assigned staff, disabled/unassigned staff exclusion, pending versus completed bookings, selected staff behavior, safe DTO fields, and endpoint validation.
+Database tests exercise the application through Prisma against PostgreSQL. They verify:
 
-TASK-006 adds deterministic reference and booking limiter unit tests plus live PostgreSQL booking service/API integration. Coverage proves authoritative snapshots/end time, normalized contact data, atomic initial status history, specific staff rejection, deterministic any available fallback, unavailable service hiding, whole transaction collision retry, safe response fields/statuses, and throttling. Its concurrency test launches two real creates for the same staff/instant and asserts exactly one booking commits while the loser becomes `BookingConflictError`.
+1. Migrations, indexes, and relational constraints
+2. Staff and service assignments
+3. Public service visibility
+4. Recurring availability and blocked time
+5. Booking creation, authoritative snapshots, and audit events
+6. Public lookup, cancellation, and rescheduling
+7. Staff and administrator resource scope
+8. Analytics across studio-local dates and DST boundaries
+9. Safe public DTOs and generic verification failures
 
-TASK-007 adds lookup limiter/status label unit coverage and live PostgreSQL service/API verification. Tests change the live service facts while retaining original booking snapshots, prove normalized two factor matching, compare wrong email and unknown reference failures, inspect the exact safe DTO, cover all five status labels, enforce private no-store headers, verify generic internal errors, and inspect persisted limiter rows for HMAC only identities.
+The PostgreSQL suites run whenever `DIRECT_URL` or `DATABASE_URL` is configured. CI and the documented local workflow provide a database, so constraint behavior is tested rather than simulated.
 
-The current suite contains 78 passing tests across 18 files when PostgreSQL is configured; database suites run against the real local database rather than mocks.
+### Concurrency and integrity tests
 
-TASK-008 adds full state machine unit coverage plus live PostgreSQL operations tests for New York today/upcoming boundaries, deterministic ordering, staff/admin list and detail scope, chronological actor safe history, own/admin mutation, cross staff denial, invalid transition rollback, audit facts, and two concurrent transitions from one expected state. Existing current user tests continue proving disabled accounts lose access.
+The suite launches real competing transactions for high-risk scheduling paths. It proves that:
 
-Before TASK-009, the complete suite contained 96 passing tests across 20 files with all database integration suites active.
+1. Two customers cannot book overlapping active appointments for the same professional.
+2. Adjacent half-open intervals remain valid.
+3. Reschedule races produce one coherent winner.
+4. Cancellation and rescheduling cannot create impossible state or audit history.
+5. PostgreSQL exclusion failures are translated into safe domain conflicts.
+6. Failed writes roll back without leaving orphan events.
 
-TASK-009 adds exact money/slug unit tests, direct management route authentication tests, and live PostgreSQL coverage for ADMIN versus STAFF mutation authority, slug/email uniqueness, normalized email, bcrypt persistence, forced role/status, disabled authentication, service visibility toggles, transactional assignment replacement, public eligible staff effects, and booking snapshot preservation. Manual QA covers the responsive admin forms and direct STAFF access denial; schedule based availability editing remains TASK-010.
+### Security and authorization regression tests
 
-The complete TASK-009 suite contains 114 passing tests across 23 files with PostgreSQL configured; none of the database suites are skipped.
+Regression coverage verifies generic credential failures, disabled account denial, server-side ADMIN and STAFF boundaries, staff ownership scope, explicit public projections, private response headers, limiter action isolation, HMAC-only stored identities, and trusted Vercel network identity derivation.
 
-TASK-010 adds wall clock/DST unit coverage and live PostgreSQL schedule management coverage. It verifies ADMIN and self scope, cross staff hiding, invalid/overlapping/duplicate/touching windows, block timezone conversion and overlaps, disabled staff policy, all five booking statuses, booking immutability, and add/remove rule/block effects through the real TASK-005 availability service.
+Login, booking creation, lookup, cancellation, and rescheduling use independent limiter actions. Tests confirm that one public action cannot consume another action's allowance.
 
-The complete TASK-010 suite contains 127 passing tests across 25 files with every PostgreSQL integration suite active.
+## Mixed-case booking reference regression
 
-TASK-011 adds limiter unit coverage and live PostgreSQL booking change coverage. It verifies `PENDING`/`CONFIRMED` cancellation, equality at cutoff versus inside cutoff rejection, generic verification failures, same row/reference/status/snapshot rescheduling, immutable audit facts, released/moved capacity, deterministic Any available assignment, stale and terminal conflicts, STAFF own/self scope, ADMIN eligible staff selection, and concurrent cancel/reschedule coherence. Existing login and booking creation limiter tests remain unchanged and passing, proving the new action buckets are isolated.
+Production QA uncovered a mismatch between public lookup and booking changes for mixed-case references. The regression suite now uses a deliberately mixed-case reference and proves that:
 
-The complete TASK-011 suite contains 136 passing tests across 27 files with every PostgreSQL integration suite active.
+1. Public lookup succeeds with the exact stored reference.
+2. Surrounding whitespace is trimmed without changing letter case.
+3. Transactional rescheduling succeeds.
+4. Transactional cancellation succeeds.
+5. The stored and returned reference remains unchanged.
 
-TASK-012 adds range parser unit coverage and live PostgreSQL analytics coverage. Tests prove the precise default and explicit half open ranges, malformed/reversed/overlong rejection, 23- and 25 hour DST days, New York local day grouping near UTC midnight, all current status counts, deterministic service ranking with inactive historical services and snapshot names, disabled staff workload with cancelled rows excluded, aggregate DTO privacy, and STAFF rejection at the query boundary.
+The temporary production diagnostics used to isolate the mismatch were removed after the fix was confirmed.
 
-The complete TASK-012 suite contains 145 passing tests across 29 files with every PostgreSQL integration suite active.
+## Manual hosted QA
 
-TASK-013 applies shared front end primitives and semantic markup improvements without changing back end contracts. Automated validation remains the existing full suite; review specifically covers role aware active navigation, labeled controls, text equivalents for analytics bars, disabled/loading action states, empty state guidance, visible focus, responsive wrapping/overflow safeguards, and `prefers-reduced-motion` handling. Authenticated browser visual QA remains outstanding when the browser automation helper is unavailable.
+Hosted QA was completed at [aurelia-studio-orcin.vercel.app](https://aurelia-studio-orcin.vercel.app). The verified journeys include:
 
-TASK-014 adds regression coverage for the production security header policy and trusted Vercel proxy identity derivation. The complete suite now contains 148 passing tests across 31 files when PostgreSQL is configured. Existing login, booking creation, lookup, cancellation, and reschedule limiter tests remain in the suite, proving the shared proxy identity refactor did not change their HMAC bucket policies or action isolation. Manual production QA should inspect headers on a Vercel preview, exercise login/booking/verified management error paths, verify no private response is cached, and confirm an untrusted forwarding header is not treated as a client identity outside Vercel.
+1. Public service browsing and service details
+2. Availability and professional eligibility
+3. Public booking creation and confirmation
+4. Booking lookup with the correct reference and email
+5. Customer rescheduling and cancellation
+6. Administrator login and protected route behavior
+7. Appointment progression from `PENDING` to `CONFIRMED` to `COMPLETED`
+8. Customer changes appearing correctly in the administrator workspace
 
-The live PostgreSQL integration suite covers `StaffService` uniqueness and the manual overlap constraint. It proves adjacent half open bookings succeed, overlapping active bookings fail, and `CANCELLED`/`COMPLETED` rows do not block replacements. It skips only when neither `DIRECT_URL` nor `DATABASE_URL` is present; CI and a configured local `.env` run it against PostgreSQL rather than mocking the constraint.
+Wrong-email and unknown-reference attempts were checked for the same generic response. Protected administrator routes required authentication, and reviewed public responses did not expose obvious secrets or private data.
 
-Manual authentication QA should verify keyboard/paste friendly sign in, generic invalid credential feedback, successful redirect to `/admin`, sign out, responsive layout, and direct signed out `/admin` redirection. A temporary development administrator may be created with `npm run admin:provision`; never record its password in logs or committed fixtures.
+## Responsive and accessibility checks
 
-Public catalogue QA runs `npm run db:bootstrap:services`, then checks `/`, `/services`, a real detail slug, invalid/private slugs, keyboard visible links, responsive layouts, and the deliberately disabled booking CTA. Integration fixtures must be deleted after each run and must not use production data.
+Desktop and mobile layouts received responsive spot checks across the public catalogue, service details, booking management, and administrator workspace. Keyboard navigation and visible focus were also checked on critical journeys.
 
-Availability QA uses a deterministic fixed clock in tests and checks `/api/availability` with a real service/date, an invalid date, a private service, and optional staff id. DST tests use `America/New_York` explicitly and never depend on the machine timezone. Results are advisory and must not be described as reservations.
+The interface includes semantic headings, labeled controls, non-color state indicators, text equivalents for analytics bars, purposeful empty states, reduced-motion support, and responsive overflow safeguards. These checks are practical release evidence, not a formal accessibility certification or complete screen-reader audit.
 
-Booking UI QA may use `npm run db:bootstrap:services` followed by `npm run db:bootstrap:booking-demo`. Verify specific and any professional paths, date/time reloads, contact field errors, review, pending confirmation/reference, persisted booking/event, disappearance of the occupied slot, keyboard focus, mobile layout, pending button lockout, and friendly stale slot recovery. Demo bootstrap data is development only and must never target production.
+## Local validation
 
-Public management QA uses a development booking at `/manage-booking`. Verify reference plus normalized email succeeds, wrong email and unknown reference render identical generic text, malformed fields remain specific, snapshots and studio local time display correctly, and the URL remains free of credentials. Check that eligible actions reflect the configured cutoff, equality is accepted, cancellation removes capacity, rescheduling keeps the reference/status/snapshots while moving capacity, stale submissions are safe, terminal bookings expose no actions, and response headers prohibit storage.
-
-Authenticated appointment QA also checks rescheduling: STAFF can move only their own appointment and remains assigned to themselves; ADMIN can move any visible appointment to a currently eligible professional. Internal cancellation continues through the status workflow and internal changes are not subject to customer cutoffs. Confirm actor/note reschedule history renders chronologically.
-
-Analytics QA uses development only or integration fixtures spanning dates, statuses, services, and active/disabled staff. Verify ADMIN navigation and direct access, STAFF denial, the default and alternate ranges, local day trend, deterministic service order, not cancelled workload totals, a useful zero data state, mobile layout, keyboard visible controls, text equivalents for charts, and the absence of customer PII.
-
-Appointment workflow QA can use `db:bootstrap:appointment-workflow` after supplying three local passwords through the shell. Check admin wide and staff owned views, direct cross staff denial, valid status changes, terminal actions, audit actor/note display, logout, and disabled user denial. The command is create only and production blocked.
-
-Local database test sequence:
+Start the local database, apply migrations, and run the quality gates:
 
 ```bash
 docker compose up -d db
 npm run db:deploy
 npm run db:smoke
 npm test
+npm run lint
+npm run typecheck
+npm run build
+git diff --check
 ```
 
-## Task #15 hosted QA status
+The final documented run passed all commands. Integration fixtures use synthetic data and are removed after each suite.
 
-Hosted QA is not yet performed. The browser automation helper and hosted provider/account access were unavailable during documentation preparation, so no production URL, screenshots, browser console result, Vercel log result, connection pool observation, or responsive/keyboard finding is claimed. Run the deployment runbook and hosted checklist before marking TASK-015 complete.
+## Testing principles
+
+1. Verify behavior at trust boundaries, not only interface visibility.
+2. Use explicit dates, time zones, and clocks.
+3. Keep database invariants covered by real database tests.
+4. Test failure paths and concurrency in proportion to risk.
+5. Treat availability shown in the browser as advisory until a transaction commits.
+6. Keep fixtures synthetic and production data outside the test process.
